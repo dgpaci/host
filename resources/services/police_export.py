@@ -11,13 +11,6 @@ from datetime import datetime
 class PoliceExportService(object):
     """Service to export guest data in police-required format"""
 
-    # Guest type codes (Tipo Alloggiato)
-    GUEST_TYPE_SINGLE = '16'  # Ospite singolo
-    GUEST_TYPE_FAMILY_HEAD = '17'  # Capo famiglia
-    GUEST_TYPE_GROUP_HEAD = '18'  # Capo gruppo
-    GUEST_TYPE_FAMILY_MEMBER = '19'  # Familiare
-    GUEST_TYPE_GROUP_MEMBER = '20'  # Membro gruppo
-
     def __init__(self, db):
         self.db = db
 
@@ -33,7 +26,7 @@ class PoliceExportService(object):
         stay_guests = self.db.table('host.stay_guest').query(
             where='$stay_id=:stay_id',
             stay_id=stay_id,
-            order_by='$is_group_leader DESC, @guest_id.@anagrafica_id.cognome'
+            order_by='@guest_type_id.code, @guest_id.@anagrafica_id.cognome'
         ).fetch()
 
         lines = []
@@ -52,8 +45,11 @@ class PoliceExportService(object):
             pkey=guest['anagrafica_id']
         ).output('dict')
 
-        # Determine guest type
-        guest_type = self.GUEST_TYPE_GROUP_HEAD if stay_guest['is_group_leader'] else self.GUEST_TYPE_GROUP_MEMBER
+        # Get guest type code
+        guest_type_rec = self.db.table('host.guest_type').record(
+            pkey=stay_guest['guest_type_id']
+        ).output('dict')
+        guest_type = guest_type_rec.get('code', '20') if guest_type_rec else '20'
 
         # Build the 178-character line
         parts = []

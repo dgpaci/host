@@ -18,7 +18,8 @@ class View(BaseComponent):
                                    FROM host.stay_guest sg
                                    JOIN host.guest gu ON sg.guest_id = gu.id
                                    JOIN erpy_base.anagrafica g ON gu.anagrafica_id = g.id
-                                   WHERE sg.stay_id = $id AND sg.is_group_leader = TRUE
+                                   JOIN host.guest_type gt ON sg.guest_type_id = gt.id
+                                   WHERE sg.stay_id = $id AND gt.code IN ('17', '18')
                                    LIMIT 1)""")
         return struct
 
@@ -63,14 +64,14 @@ class ViewFromStay(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
         r.fieldcell('guest_name', width='25em', name='Guest')
-        r.fieldcell('is_group_leader', width='8em', name='Leader')
+        r.fieldcell('guest_type_description', width='15em', name='Type')
         r.fieldcell('guest_birth_date', width='10em', name='Birth Date')
         r.fieldcell('tax_description', width='30em', name='Tax Rate')
         r.fieldcell('tax_amount', width='10em', name='Tax Amount', dtype='N')
         return struct
 
     def th_order(self):
-        return 'is_group_leader DESC, guest_surname'
+        return 'guest_type_code, guest_surname'
 
 class FormFromStay(BaseComponent):
     def th_form(self, form):
@@ -80,7 +81,7 @@ class FormFromStay(BaseComponent):
         fb.field('guest_id', width='40em', colspan=2,
                 auxColumns='$birth_date,$citizenship',
                 hasDownArrow=True)
-        fb.field('is_group_leader', width='10em')
+        fb.field('guest_type_id', width='30em', hasDownArrow=True)
         fb.field('tourist_tax_id', width='40em', colspan=2, hasDownArrow=True)
         fb.field('tax_amount', width='15em', readonly=True)
 

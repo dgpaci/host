@@ -13,6 +13,7 @@ class Menu(object):
         anagrafica.thpage("Facilities", table="host.facility")
         anagrafica.thpage("Facility Types", table="host.facility_type")
         anagrafica.thpage("Guests", table="host.guest")
+        anagrafica.thpage("Guest Types", table="host.guest_type")
         anagrafica.thpage("Document Types", table="host.document_type")
         anagrafica.thpage("Tourist Tax Rates", table="host.tourist_tax")
 

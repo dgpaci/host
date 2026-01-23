@@ -10,12 +10,12 @@ class View(BaseComponent):
         r.fieldcell('stay_check_in', width='10em', name='Check-in')
         r.fieldcell('stay_check_out', width='10em', name='Check-out')
         r.fieldcell('guest_name', width='25em', name='Guest')
-        r.fieldcell('is_group_leader', width='8em', name='Leader')
+        r.fieldcell('guest_type_description', width='15em', name='Type')
         r.fieldcell('tax_amount', width='100%', name='Tax', dtype='N')
         return struct
 
     def th_order(self):
-        return 'stay_check_in DESC, is_group_leader DESC'
+        return 'stay_check_in DESC, guest_type_code'
 
     def th_query(self):
         return dict(column='guest_surname', op='contains', val='')
@@ -29,7 +29,7 @@ class Form(BaseComponent):
         fb.field('guest_id', width='40em', colspan=2,
                 auxColumns='$birth_date,$citizenship',
                 hasDownArrow=True)
-        fb.field('is_group_leader', width='10em')
+        fb.field('guest_type_id', width='30em', hasDownArrow=True)
         fb.field('tourist_tax_id', width='40em', colspan=2, hasDownArrow=True)
         fb.field('tax_amount', width='15em', readonly=True)
 

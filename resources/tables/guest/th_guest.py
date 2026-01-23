@@ -58,7 +58,7 @@ class ViewFromGuest(BaseComponent):
         r.fieldcell('stay_check_in', width='10em', name='Check-in')
         r.fieldcell('stay_check_out', width='10em', name='Check-out')
         r.fieldcell('stay_nights', width='8em', name='Nights')
-        r.fieldcell('is_group_leader', width='8em', name='Leader')
+        r.fieldcell('guest_type_description', width='15em', name='Type')
         r.fieldcell('tax_amount', width='10em', name='Tax', dtype='N')
         return struct
 

@@ -52,7 +52,60 @@ The Host Management System is designed for accommodation facilities (hotels, B&B
 
 ## Database Schema
 
-### Tables
+### Lookup Tables
+
+#### `facility_type` (Lookup)
+Types of accommodation facilities
+- `id` (PK)
+- `code` - Type code
+- `description` - Type description
+
+#### `guest_type` (Lookup)
+Guest type classification (Tipo Alloggiato)
+- `id` (PK)
+- `code` - Guest type code
+- `description` - Guest type description
+- `is_leader` - **Calculated field** (TRUE if code is '17' or '18')
+
+**Official Codes**:
+- `16`: OSPITE SINGOLO (Single guest)
+- `17`: CAPO FAMIGLIA (Family head) - **Leader**
+- `18`: CAPO GRUPPO (Group head) - **Leader**
+- `19`: FAMILIARE (Family member)
+- `20`: MEMBRO GRUPPO (Group member)
+
+#### `document_type` (Lookup)
+Types of identification documents (96 official Italian codes)
+- `id` (PK)
+- `code` - Document code (e.g., "IDENT", "PASOR")
+- `description` - Document description (e.g., "CARTA DI IDENTITA'", "PASSAPORTO ORDINARIO")
+
+**Standard Codes** (partial list):
+- `IDENT`: CARTA DI IDENTITA'
+- `IDELE`: CARTA IDENTITA' ELETTRONICA
+- `PASOR`: PASSAPORTO ORDINARIO
+- `PATEN`: PATENTE DI GUIDA
+- (See initial_data.sql for complete list of 96 document types)
+
+#### `tourist_tax` (Lookup)
+Tourist tax rates and exemptions
+- `id` (PK)
+- `code` - Tax code (e.g., "0000000001" to "0000000009")
+- `description` - Tax description/exemption reason
+- `amount` - Tax amount per night (EUR)
+
+**Standard Codes** (from Italian tourist tax regulations):
+- `0000000001`: Exemption for minors under 12 years
+- `0000000002`: Exemption for residents
+- `0000000003`: Exemption for tour guides (groups of 25+)
+- `0000000004`: Exemption for facility staff
+- `0000000005`: **NO EXEMPTION** (standard rate)
+- `0000000006`: Exemption for non-self-sufficient persons with medical certificate
+- `0000000007`: Exemption for Civil Protection volunteers
+- `0000000008`: Exemption for police and military personnel on duty
+- `0000000009`: Exemption for guests with free accommodation
+
+### Main Tables
 
 #### `facility`
 Accommodation facilities registry
@@ -60,12 +113,6 @@ Accommodation facilities registry
 - `anagrafica_id` (FK to `erpy_base.anagrafica`) - Owner/Manager
 - `name` - Facility name
 - `facility_type_id` (FK to `facility_type`)
-
-#### `facility_type` (Lookup)
-Types of accommodation facilities
-- `id` (PK)
-- `code` - Type code
-- `description` - Type description
 
 #### `guest`
 Guest registry with document information
@@ -77,13 +124,7 @@ Guest registry with document information
 - `document_issue_date` - Issue date
 - `document_expiry_date` - Expiry date
 
-**Note**: Document fields are required only for group leaders.
-
-#### `document_type` (Lookup)
-Types of identification documents
-- `id` (PK)
-- `code` - Document code (e.g., "ID", "PASS")
-- `description` - Document description (e.g., "Identity Card", "Passport")
+**Note**: Document fields are required only for group leaders (guest types 17, 18).
 
 #### `stay`
 Accommodation stays
@@ -105,34 +146,17 @@ Relationship between stays and guests
 - `id` (PK)
 - `stay_id` (FK to `stay`)
 - `guest_id` (FK to `guest`)
-- `is_group_leader` - Boolean flag for group leader
+- `guest_type_id` (FK to `guest_type`) - **Required**
 - `tourist_tax_id` (FK to `tourist_tax`)
 - `tax_amount` - **Calculated field** (nights × tax rate)
 
 **Business Logic**:
-- Each stay must have exactly one group leader (`is_group_leader = TRUE`)
+- Each stay must have at least one group leader (guest_type code '17' or '18')
+- Guest type determines the role: single guest, family/group head, or member
 - Tax amount is automatically calculated based on:
   - Number of nights from stay
   - Tax rate from tourist_tax
   - Exemptions (tax_rate = 0)
-
-#### `tourist_tax` (Lookup)
-Tourist tax rates and exemptions
-- `id` (PK)
-- `code` - Tax code (e.g., "0000000001" to "0000000009")
-- `description` - Tax description/exemption reason
-- `amount` - Tax amount per night (EUR)
-
-**Standard Codes** (from Italian tourist tax regulations):
-- `0000000001`: Exemption for minors under 12 years
-- `0000000002`: Exemption for residents
-- `0000000003`: Exemption for tour guides (groups of 25+)
-- `0000000004`: Exemption for facility staff
-- `0000000005`: **NO EXEMPTION** (standard rate)
-- `0000000006`: Exemption for non-self-sufficient persons with medical certificate
-- `0000000007`: Exemption for Civil Protection volunteers
-- `0000000008`: Exemption for police and military personnel on duty
-- `0000000009`: Exemption for guests with free accommodation
 
 ## Installation
 
@@ -156,6 +180,7 @@ Tourist tax rates and exemptions
   - Facilities
   - Facility Types
   - Guests
+  - Guest Types
   - Document Types
   - Tourist Tax Rates
 - Operations
@@ -164,8 +189,9 @@ Tourist tax rates and exemptions
 ### Typical Workflow
 
 1. **Setup Master Data**
+   - Guest types are pre-loaded (5 official codes)
+   - Document types are pre-loaded (96 official codes)
    - Create facility types (Hotel, B&B, Apartment, etc.)
-   - Create document types (Identity Card, Passport)
    - Configure tourist tax rates with exemption codes
 
 2. **Register Facilities**
@@ -174,13 +200,14 @@ Tourist tax rates and exemptions
 
 3. **Register Guests**
    - Link to existing anagrafica record (or create new)
-   - For group leaders: enter document information
+   - For group leaders (types 17, 18): enter document information
 
 4. **Create Stays**
    - Select facility
    - Enter check-in and check-out dates (nights calculated automatically)
    - Add guests to the stay:
-     - Designate one guest as group leader
+     - Select guest_type for each guest (16=single, 17=family head, 18=group head, 19=family member, 20=group member)
+     - At least one guest must be a leader (type 17 or 18)
      - Assign tourist tax rate for each guest
      - Tax amount calculated automatically
 
@@ -247,6 +274,7 @@ host/
 │   ├── facility.py
 │   ├── facility_type.py
 │   ├── guest.py
+│   ├── guest_type.py
 │   ├── document_type.py
 │   ├── stay.py
 │   ├── stay_guest.py
@@ -261,6 +289,8 @@ host/
 │       │   └── th_facility_type.py
 │       ├── guest/
 │       │   └── th_guest.py
+│       ├── guest_type/
+│       │   └── th_guest_type.py
 │       ├── document_type/
 │       │   └── th_document_type.py
 │       ├── stay/
@@ -275,10 +305,14 @@ host/
 ### Key Design Decisions
 
 1. **Anagrafica Integration**: Personal data stored in centralized registry to avoid duplication
-2. **Group Leader Model**: Only group leaders require document tracking
-3. **Calculated Fields**: Nights and tax amounts calculated automatically
-4. **Stay-centric View**: UI shows stays with group leader, not individual guests
-5. **Italian Compliance**: Police export follows official ISTAT format requirements
+2. **Guest Type System**: Uses official Italian codes (16-20) to classify guests
+3. **Group Leader Model**: Only group leaders (types 17, 18) require document tracking
+4. **Calculated Fields**: Nights and tax amounts calculated automatically
+5. **Stay-centric View**: UI shows stays with group leader, not individual guests
+6. **Italian Compliance**:
+   - 5 official guest types (Tipo Alloggiato)
+   - 96 official document types
+   - Police export follows official ISTAT format (178 chars)
 
 ## API / Services
 

@@ -23,8 +23,9 @@ class Table(object):
             .relation('host.guest.id', mode='foreignkey',
                      relation_name='guest_stays', onDelete='raise')
 
-        tbl.column('is_group_leader', dtype='B', name_long='Is Group Leader',
-                   name_short='Leader', default=False)
+        tbl.column('guest_type_id', size='22', name_long='Guest Type', validate_notnull=True)\
+            .relation('host.guest_type.id', mode='foreignkey',
+                     relation_name='stay_guests', onDelete='raise')
 
         tbl.column('tourist_tax_id', size='22', name_long='Tourist Tax Rate')\
             .relation('host.tourist_tax.id', mode='foreignkey',
@@ -38,6 +39,11 @@ class Table(object):
         tbl.aliasColumn('guest_surname', '@guest_id.surname', name_long='Surname')
         tbl.aliasColumn('guest_firstname', '@guest_id.name', name_long='First Name')
         tbl.aliasColumn('guest_birth_date', '@guest_id.birth_date', name_long='Birth Date')
+        tbl.aliasColumn('guest_type_code', '@guest_type_id.code', name_long='Guest Type Code')
+        tbl.aliasColumn('guest_type_description', '@guest_type_id.description',
+                       name_long='Guest Type')
+        tbl.aliasColumn('is_group_leader', '@guest_type_id.is_leader',
+                       name_long='Is Group Leader')
         tbl.aliasColumn('stay_nights', '@stay_id.nights', name_long='Nights')
         tbl.aliasColumn('stay_check_in', '@stay_id.check_in_date', name_long='Check-in')
         tbl.aliasColumn('stay_check_out', '@stay_id.check_out_date', name_long='Check-out')
