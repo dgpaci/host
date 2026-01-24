@@ -1,0 +1,20 @@
+# Instance-specific gitignore
+
+# Logs
+*.log
+logs/
+
+# Session data
+sessions/
+
+# Temporary files
+*.tmp
+*.pyc
+__pycache__/
+
+# Local database overrides (if any)
+instanceconfig.local.xml
+
+# Site data
+site/
+data/
