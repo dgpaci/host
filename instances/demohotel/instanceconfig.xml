@@ -12,9 +12,9 @@
 
   <!-- Packages -->
   <packages>
-    <sys/>
-    <adm/>
-    <glbl/>
+    <gnrcore_sys/>
+    <gnrcore_adm/>
+    <gnrcore_glbl/>
     <host/>
   </packages>
 
