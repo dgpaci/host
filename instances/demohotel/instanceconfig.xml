@@ -11,7 +11,12 @@
   <db_implementation>postgresql</db_implementation>
 
   <!-- Packages -->
-  <packages>sys,adm,glbl,host</packages>
+  <packages>
+    <sys/>
+    <adm/>
+    <glbl/>
+    <host/>
+  </packages>
 
   <!-- Instance Settings -->
   <wsgi_port>8090</wsgi_port>
