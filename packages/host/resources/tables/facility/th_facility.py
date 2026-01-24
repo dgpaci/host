@@ -8,6 +8,7 @@ class View(BaseComponent):
         r = struct.view().rows()
         r.fieldcell('name', width='30em')
         r.fieldcell('facility_type_description', width='15em', name='Type')
+        r.fieldcell('comune_nome', width='20em', name='Municipality')
         r.fieldcell('owner_name', width='100%', name='Owner')
         return struct
 
@@ -25,6 +26,7 @@ class Form(BaseComponent):
         fb.field('name', width='40em', colspan=2)
         fb.field('anagrafica_id', width='40em', colspan=2)
         fb.field('facility_type_id', width='30em')
+        fb.field('comune_id', width='30em', hasDownArrow=True)
 
         # Bottom section for related stays
         center = bc.tabContainer(region='center', margin='2px')

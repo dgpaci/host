@@ -10,6 +10,8 @@ class View(BaseComponent):
         r.fieldcell('check_in_date', width='10em', name='Check-in')
         r.fieldcell('check_out_date', width='10em', name='Check-out')
         r.fieldcell('nights', width='8em')
+        r.fieldcell('arrival_time', width='10em', name='Arrival')
+        r.fieldcell('flight_number', width='12em', name='Flight')
 
         # Show group leader name (calculated via SQL)
         r.fieldcell('group_leader_name', width='100%', name='Group Leader',
@@ -34,12 +36,15 @@ class Form(BaseComponent):
         bc = form.center.borderContainer()
 
         # Top section - main data
-        top = bc.contentPane(region='top', height='120px', datapath='.record')
+        top = bc.contentPane(region='top', height='160px', datapath='.record')
         fb = top.formbuilder(cols=3, border_spacing='4px')
         fb.field('facility_id', width='40em', colspan=3, hasDownArrow=True)
         fb.field('check_in_date', width='12em')
         fb.field('check_out_date', width='12em')
         fb.field('nights', width='8em', readonly=True)
+        fb.field('arrival_time', width='10em')
+        fb.field('flight_number', width='15em')
+        fb.field('safe_code', width='8em')
 
         # Center section - guests in this stay
         center = bc.tabContainer(region='center', margin='2px')

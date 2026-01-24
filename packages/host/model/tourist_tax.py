@@ -17,5 +17,5 @@ class Table(object):
 
         tbl.column('code', size=':15', name_long='Code', validate_notnull=True, unique=True)
         tbl.column('description', size=':200', name_long='Description', validate_notnull=True)
-        tbl.column('amount', dtype='N', size='12,2', name_long='Amount (EUR per night)', default=0,
-                   name_short='Amount')
+        tbl.column('amounts', dtype='X', name_long='Amounts per Municipality',
+                   name_short='Amounts')

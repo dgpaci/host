@@ -25,6 +25,15 @@ class Table(object):
         tbl.column('check_out_date', dtype='D', name_long='Check-out Date', validate_notnull=True,
                    name_short='Check-out')
 
+        tbl.column('arrival_time', dtype='H', name_long='Arrival Time',
+                   name_short='Arrival')
+
+        tbl.column('flight_number', size='20', name_long='Flight Number',
+                   name_short='Flight')
+
+        tbl.column('safe_code', size='4', name_long='Safe Code',
+                   name_short='Safe')
+
         # Calculated field: number of nights
         tbl.formulaColumn('nights', "($check_out_date - $check_in_date)",
                          dtype='I', name_long='Number of Nights', name_short='Nights')

@@ -25,8 +25,14 @@ class Table(object):
             .relation('host.facility_type.id', mode='foreignkey',
                      relation_name='facilities', onDelete='raise')
 
+        tbl.column('comune_id', size='22', name_long='Municipality', validate_notnull=True)\
+            .relation('glbl.comune.id', mode='foreignkey',
+                     relation_name='facilities', onDelete='raise')
+
         # Alias columns from anagrafica
         tbl.aliasColumn('owner_name', '@anagrafica_id.ragione_sociale', name_long='Owner Name')
         tbl.aliasColumn('facility_type_code', '@facility_type_id.code', name_long='Type Code')
         tbl.aliasColumn('facility_type_description', '@facility_type_id.description',
                        name_long='Type Description')
+        tbl.aliasColumn('comune_nome', '@comune_id.nome', name_long='Municipality Name')
+        tbl.aliasColumn('comune_sigla_provincia', '@comune_id.sigla_provincia', name_long='Province')

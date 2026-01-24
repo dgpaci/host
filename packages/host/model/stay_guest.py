@@ -48,7 +48,7 @@ class Table(object):
         tbl.aliasColumn('stay_check_in', '@stay_id.check_in_date', name_long='Check-in')
         tbl.aliasColumn('stay_check_out', '@stay_id.check_out_date', name_long='Check-out')
         tbl.aliasColumn('facility_name', '@stay_id.@facility_id.name', name_long='Facility')
-        tbl.aliasColumn('tax_rate_amount', '@tourist_tax_id.amount', name_long='Tax Rate')
+        tbl.aliasColumn('facility_comune_id', '@stay_id.@facility_id.comune_id', name_long='Facility Municipality ID')
         tbl.aliasColumn('tax_description', '@tourist_tax_id.description', name_long='Tax Description')
 
     def trigger_onInserting(self, record=None, **kwargs):
@@ -63,7 +63,7 @@ class Table(object):
         """
         Calculate total tax amount based on:
         - Number of nights from stay
-        - Tax rate from tourist_tax
+        - Tax rate from tourist_tax (per municipality)
         - Guest age (exemptions for children under 12)
         """
         stay_id = record.get('stay_id')
@@ -74,24 +74,51 @@ class Table(object):
             record['tax_amount'] = 0
             return
 
-        # Get stay information
+        # Get stay and facility information
         stay = self.db.table('host.stay').record(pkey=stay_id).output('dict')
         if not stay or not stay.get('nights'):
             record['tax_amount'] = 0
             return
 
         nights = stay.get('nights', 0)
+        facility_id = stay.get('facility_id')
 
-        # Get tax rate
-        tax = self.db.table('host.tourist_tax').record(pkey=tourist_tax_id).output('dict')
+        if not facility_id:
+            record['tax_amount'] = 0
+            return
+
+        # Get facility comune
+        facility = self.db.table('host.facility').record(pkey=facility_id).output('dict')
+        if not facility:
+            record['tax_amount'] = 0
+            return
+
+        comune_id = facility.get('comune_id')
+        if not comune_id:
+            record['tax_amount'] = 0
+            return
+
+        # Get tax record with amounts bag
+        tax = self.db.table('host.tourist_tax').record(pkey=tourist_tax_id).output('bag')
         if not tax:
             record['tax_amount'] = 0
             return
 
-        tax_rate = tax.get('amount', 0)
+        # Get amounts bag
+        amounts_bag = tax.getItem('amounts')
+        if not amounts_bag:
+            record['tax_amount'] = 0
+            return
 
-        # Check if it's an exemption (tax_rate = 0)
-        if tax_rate == 0:
+        # Find the rate for this comune
+        tax_rate = None
+        for node_key in amounts_bag.keys():
+            node = amounts_bag.getItem(node_key)
+            if node and node.getItem('comune_id') == comune_id:
+                tax_rate = node.getItem('amount', 0)
+                break
+
+        if tax_rate is None or tax_rate == 0:
             record['tax_amount'] = 0
             return
 
