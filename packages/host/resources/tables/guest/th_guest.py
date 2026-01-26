@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from gnr.web.gnrwebpage import BaseComponent
+from gnr.web.gnrbaseclasses import BaseComponent
+
 
 class View(BaseComponent):
     def th_struct(self, struct):
@@ -20,6 +21,20 @@ class View(BaseComponent):
     def th_query(self):
         return dict(column='surname', op='contains', val='')
 
+
+class ViewFromStay(BaseComponent):
+    def th_struct(self, struct):
+        r = struct.view().rows()
+        r.fieldcell('full_name', width='20em', name='Guest')
+        r.fieldcell('guest_type_description', width='10em', name='Type')
+        r.fieldcell('birth_date', width='6em', name='Birth Date')
+        r.fieldcell('tax_amount', width='10em', name='Tax Amount', dtype='N', totalize=True)
+        return struct
+
+    def th_order(self):
+        return 'guest_type_code, surname'
+    
+    
 class Form(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
@@ -52,11 +67,12 @@ class Form(BaseComponent):
     
 
 class FormFromStay(BaseComponent):
-    py_requires='er_core_component/AnagraficaComponent'
+    py_requires="er_core_component:AnagraficaComponent"
     
     def th_form(self, form):
         bc = form.center.borderContainer()
-        bc.contentPane(region='top', height='350px').anagraficaPane(tipo_anagrafica='persona',
+        bc.contentPane(region='top', height='350px').anagraficaPane(
+                                tipo_anagrafica='persona',
                                 linkerBar=False,
                                 title='Guest Information',
                                 saveIndirizzoEsteso=False,
@@ -83,17 +99,3 @@ class FormFromStay(BaseComponent):
 
     def th_options(self):
         return dict(dialog_height='500px', dialog_width='700px')
-
-
-class ViewFromStay(BaseComponent):
-    def th_struct(self, struct):
-        r = struct.view().rows()
-        r.fieldcell('full_name', width='25em', name='Guest')
-        r.fieldcell('guest_type_description', width='15em', name='Type')
-        r.fieldcell('birth_date', width='10em', name='Birth Date')
-        r.fieldcell('tax_description', width='30em', name='Tax Rate')
-        r.fieldcell('tax_amount', width='10em', name='Tax Amount', dtype='N')
-        return struct
-
-    def th_order(self):
-        return 'guest_type_code, surname'

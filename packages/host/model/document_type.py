@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from gnr.core.gnrdecorator import metadata
+
 class Table(object):
     """Document Type lookup table (Identity Card, Passport, etc.)"""
 
@@ -18,3 +20,23 @@ class Table(object):
 
         tbl.column('code', size=':10', name_long='Code')
         tbl.column('description', size=':50', name_long='Description', validate_notnull=True)
+
+    @metadata(mandatory=True)
+    def sysRecord_IDENT(self):
+        return self.newrecord(code='IDENT', description="CARTA DI IDENTITA'")
+
+    @metadata(mandatory=True)
+    def sysRecord_IDELE(self):
+        return self.newrecord(code='IDELE', description="CARTA IDENTITA' ELETTRONICA")
+
+    @metadata(mandatory=True)
+    def sysRecord_PASOR(self):
+        return self.newrecord(code='PASOR', description='PASSAPORTO ORDINARIO')
+
+    @metadata(mandatory=True)
+    def sysRecord_PATEN(self):
+        return self.newrecord(code='PATEN', description='PATENTE DI GUIDA')
+
+    @metadata(mandatory=True)
+    def sysRecord_CIDIP(self):
+        return self.newrecord(code='CIDIP', description='CARTA ID. DIPLOMATICA')

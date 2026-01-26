@@ -20,11 +20,11 @@ class Table(object):
                      relation_name='facilities', onDelete='raise')
 
         tbl.column('name', size=':100', name_long='Facility Name', validate_notnull=True)
-
+        tbl.column('max_beds', dtype='N', name_long='Max Beds', name_short='Beds')
         tbl.column('facility_type_id', size=':10', name_long='Facility Type', validate_notnull=True)\
             .relation('host.facility_type.code', mode='foreignkey',
                      relation_name='facilities', onDelete='raise')
-
+    
         tbl.aliasColumn('comune_id', '@anagrafica_id.comune_id', name_long='Municipality').relation(
                     'glbl.comune.id', mode='foreignkey')
 

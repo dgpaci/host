@@ -58,17 +58,17 @@ class Table(object):
         tbl.aliasColumn('birth_date', '@anagrafica_id.data_nascita', name_long='Birth Date')
         tbl.aliasColumn('birth_place', '@anagrafica_id.luogo_nascita', name_long='Birth Place')
         tbl.aliasColumn('birth_province', '@anagrafica_id.provincia_nascita', name_long='Birth Province')
-        tbl.aliasColumn('birth_country', '@anagrafica_id.stato_nascita', name_long='Birth Country')
+        tbl.aliasColumn('birth_country', '@anagrafica_id.nazione_nascita', name_long='Birth Country')
         tbl.aliasColumn('citizenship', '@anagrafica_id.cittadinanza', name_long='Citizenship')
 
-        # Alias columns from relations
-        tbl.aliasColumn('guest_type_code', '@guest_type_id.code', name_long='Guest Type Code')
-        tbl.aliasColumn('guest_type_description', '@guest_type_id.description',
+        guest = tbl.colgroup('guest', name_long='Guest Information')
+        guest.aliasColumn('guest_type_code', '@guest_type_id.code', name_long='Guest Type Code')
+        guest.aliasColumn('guest_type_description', '@guest_type_id.description',
                        name_long='Guest Type')
-        tbl.aliasColumn('is_group_leader', '@guest_type_id.is_leader',
+        guest.aliasColumn('is_group_leader', '@guest_type_id.is_leader',
                        name_long='Is Group Leader')
-        tbl.aliasColumn('document_type_code', '@document_type_id.code', name_long='Doc Type Code')
-        tbl.aliasColumn('document_type_description', '@document_type_id.description',
+        guest.aliasColumn('document_type_code', '@document_type_id.code', name_long='Doc Type Code')
+        guest.aliasColumn('document_type_description', '@document_type_id.description',
                        name_long='Doc Type Description')
         tbl.aliasColumn('tax_description', '@tourist_tax_id.description', name_long='Tax Description')
 

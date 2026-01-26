@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from gnr.web.gnrwebpage import BaseComponent
+from gnr.web.gnrbaseclasses import BaseComponent
+
 
 class View(BaseComponent):
     def th_struct(self, struct):
@@ -21,9 +22,11 @@ class Form(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
         top = bc.borderContainer(region='top', datapath='.record', height='120px')
-        fb = top.contentPane(region='center').formlet(cols=1, border_spacing='4px')
-        fb.field('name')
+        fb = top.contentPane(region='center').formlet(cols=2, border_spacing='4px')
+        fb.field('name', colspan=2)
         fb.field('facility_type_id', hasDownArrow=True)
+        fb.field('max_beds')
+        
         top.contentPane(region='right', width='400px').linkerBox('anagrafica_id',
                                                                  formResource='Form',
                                                                  dialog_windowRatio=.8)

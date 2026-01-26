@@ -13,7 +13,6 @@ class Table(object):
             name_long='Tourist Tax Rate',
             name_plural='Tourist Tax Rates',
             caption_field='description',
-            lookup=True
         )
 
         self.sysFields(tbl, id=False)

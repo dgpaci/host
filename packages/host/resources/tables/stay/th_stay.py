@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from gnr.web.gnrwebpage import BaseComponent
+from gnr.web.gnrbaseclasses import BaseComponent
+
 
 class View(BaseComponent):
     def th_struct(self, struct):
@@ -84,8 +85,9 @@ class FormFromFacility(BaseComponent):
         fb.field('safe_code', width='8em')
         
     def guestsTab(self, guests_tab):
-        guests_tab.multiButtonForm(table='host.guest',)
-                                  # formResource='FormFromStay')
+        guests_tab.dialogTableHandler(relation='@guests',
+                                      viewResource='ViewFromStay',
+                                      formResource='FormFromStay')
         
     def th_options(self):
         return dict(dialog_height='500px', dialog_width='800px', modal=True)
