@@ -20,12 +20,8 @@ class Table(object):
 
         tbl.column('code', size=':2', name_long='Code')
         tbl.column('description', size=':50', name_long='Description', validate_notnull=True)
+        tbl.column('is_leader', dtype='B', name_long='Is Group Leader')
 
-        # Helper columns to identify group leaders
-        tbl.formulaColumn('is_leader',
-                         "$code IN ('17', '18')",
-                         dtype='B',
-                         name_long='Is Group Leader')
 
     @metadata(mandatory=True)
     def sysRecord_SINGLE_GUEST(self):
@@ -35,12 +31,14 @@ class Table(object):
     @metadata(mandatory=True)
     def sysRecord_FAMILY_HEAD(self):
         return self.newrecord(code='17',
-                             description='CAPO FAMIGLIA')
+                             description='CAPO FAMIGLIA', 
+                             is_leader=True)
 
     @metadata(mandatory=True)
     def sysRecord_GROUP_HEAD(self):
         return self.newrecord(code='18',
-                             description='CAPO GRUPPO')
+                             description='CAPO GRUPPO', 
+                             is_leader=True)
 
     @metadata(mandatory=True)
     def sysRecord_FAMILY_MEMBER(self):

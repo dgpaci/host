@@ -67,19 +67,26 @@ class Form(BaseComponent):
     
 
 class FormFromStay(BaseComponent):
-    py_requires="er_core_component:AnagraficaComponent"
     
     def th_form(self, form):
-        bc = form.center.borderContainer()
-        bc.contentPane(region='top', height='350px').anagraficaPane(
-                                tipo_anagrafica='persona',
-                                linkerBar=False,
-                                title='Guest Information',
-                                saveIndirizzoEsteso=False,
-                                excludeList=['fax','voip','www','chat','partita_iva'],
-                                fb_kwargs=dict(cols=2))
-        self.guestInformations(bc.contentPane(region='center', datapath='.record'))
+        bc = form.center.borderContainer(datapath='.record')
+        self.guestPersonalDetails(bc.contentPane(region='top', datapath='.@anagrafica_id'))
+        self.guestInformations(bc.contentPane(region='center'))
     
+    def guestPersonalDetails(self, pane):
+        fl = pane.formlet(cols=4, table='er_core.anagrafica')
+        fl.field('nome', colspan=2, validate_notnull=True)
+        fl.field('cognome', colspan=2, validate_notnull=True)
+        fl.field('sesso', validate_notnull=True)
+        fl.field('data_nascita', validate_notnull=True)
+        fl.field('luogo_nascita')
+        fl.field('nazione_nascita')
+        fl.field('cittadinanza')
+        fl.field('nazione', lbl='Country of Residence', validate_notnull=True)
+        fl.field('provincia', hidden='^.nazione?=#v!="IT"', 
+                                lbl='Province of Residence', 
+                                validate_notnull='^.@guest_type_id.is_leader')
+                 
     def guestInformations(self, pane):
         fl = pane.formlet(cols=2)
 
