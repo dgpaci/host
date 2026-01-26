@@ -2,12 +2,23 @@
 
 Test instance for the Host Management System package.
 
+## Structure
+
+```
+demohotel/
+├── config/
+│   └── instanceconfig.xml    # Instance configuration
+├── root.py                     # WSGI application entry point
+└── site/                       # Site data directory (auto-created)
+```
+
 ## Packages Included
 
-- **sys** - System package
-- **adm** - Administration package
-- **glbl** - Global data (countries, municipalities, etc.)
-- **host** - Host Management System (this package)
+- **gnrcore:sys** - Genropy System package
+- **gnrcore:adm** - Genropy Administration package
+- **gnr_it:glbl** - Italian Global data (municipalities, countries, etc.)
+- **er_coerpyreadyeady** - Erpy Ready package (anagrafica, registry)
+- **host:host** - Host Management System (this package)
 
 ## Database Setup
 
@@ -23,22 +34,23 @@ Or via psql:
 CREATE DATABASE demohotel;
 ```
 
-### 2. Initialize Database Schema
+### 2. Run Database Migration
 
-Start the Genropy instance for the first time to create all tables:
+Initialize the database schema:
 
 ```bash
-gnrwsgi demohotel
+cd /Users/dgpaci/sviluppo/erpy_projects/host
+gnr db migrate demohotel
 ```
 
-Genropy will automatically create all table structures for the included packages.
+This will create all tables for the included packages.
 
 ### 3. Load Initial Data
 
-After the database schema is created, load the lookup table data:
+After migration, load the lookup table data:
 
 ```bash
-psql -U postgres -d demohotel -f ../../initial_data.sql
+psql -U postgres -d demohotel -f initial_data.sql
 ```
 
 This will populate:
@@ -52,44 +64,52 @@ This will populate:
 ### Development Mode
 
 ```bash
+cd /Users/dgpaci/sviluppo/erpy_projects/host/instances/demohotel
+python root.py
+```
+
+Or using gnrwsgi:
+
+```bash
 gnrwsgi demohotel
 ```
 
 The instance will be available at: **http://localhost:8090**
 
-### Configuration
+## Configuration
 
-The instance is configured for development with:
+The instance is configured in `config/instanceconfig.xml`:
+- **Database**: demohotel (PostgreSQL)
 - **Port**: 8090
 - **Debug mode**: Enabled
-- **Auto-reload**: Enabled
-- **Default language**: Italian
-- **Available languages**: Italian, English
+- **Main package**: host
+- **Authentication**: Standard Genropy authentication via adm package
 
 ## Default Credentials
 
-Use the default Genropy admin credentials created during first setup.
-
-## Database Configuration
-
-Edit `instanceconfig.xml` to modify database connection settings:
-- **Database name**: demohotel
-- **Host**: localhost
-- **Port**: 5432
-- **User**: postgres
-- **Password**: (empty by default)
+After first migration, create an admin user via the adm package interface.
 
 ## Testing Workflow
 
-1. Create a facility (specify name, type, owner, municipality)
-2. Configure tourist tax rates per municipality (in Tourist Tax Rates menu)
-3. Create guest records with personal and document information
-4. Create a stay (check-in/check-out dates, arrival info)
-5. Add guests to the stay with appropriate guest types and tax rates
-6. Generate police report export (TXT format)
+1. **Create a facility** (specify name, type, owner, municipality)
+2. **Configure tourist tax rates** per municipality (Tourist Tax Rates menu)
+   - Select each tax code
+   - Add municipality in the grid
+   - Set the amount (EUR per night)
+3. **Create guest records** with personal and document information
+4. **Create a stay**:
+   - Check-in/check-out dates
+   - Arrival time and flight number (optional)
+   - Safe code for apartment access (optional)
+5. **Add guests to the stay** with:
+   - Guest type (single, family head, group head, member)
+   - Tax rate/exemption
+   - Tax amount calculated automatically
+6. **Generate police report export** (TXT format, 178 characters per line)
 
 ## Notes
 
 - The instance uses PostgreSQL as the database backend
 - All Italian regulatory compliance features are enabled
-- ISTAT codes for municipalities and countries are provided by the glbl package
+- ISTAT codes for municipalities and countries are provided by gnr_it:glbl package
+- Tourist tax amounts are managed per municipality using bag structure

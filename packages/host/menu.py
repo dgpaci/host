@@ -6,10 +6,10 @@ class Menu(object):
 
     def config(self, root, **kwargs):
         """Configure menu structure"""
-        host = root.branch("Host Management", tags="host")
+        host = root.branch("Host Management")
 
         # Master data section
-        anagrafica = host.branch("Master Data", tags="masterdata")
+        anagrafica = host.branch("Master Data")
         anagrafica.thpage("Facilities", table="host.facility")
         anagrafica.thpage("Facility Types", table="host.facility_type")
         anagrafica.thpage("Guests", table="host.guest")
@@ -18,5 +18,5 @@ class Menu(object):
         anagrafica.thpage("Tourist Tax Rates", table="host.tourist_tax")
 
         # Operations section
-        operations = host.branch("Operations", tags="operations")
+        operations = host.branch("Operations")
         operations.thpage("Stays", table="host.stay")

@@ -1,20 +1,26 @@
-# Instance-specific gitignore
+# Genropy instance generated files
+
+# Site data directory
+site/
+
+# Session data
+sessions/
 
 # Logs
 *.log
 logs/
-
-# Session data
-sessions/
 
 # Temporary files
 *.tmp
 *.pyc
 __pycache__/
 
-# Local database overrides (if any)
-instanceconfig.local.xml
+# Local configuration overrides
+config/instanceconfig.local.xml
 
-# Site data
-site/
-data/
+# Compiled Python
+*.pyo
+
+# Database dumps
+*.sql.gz
+*.dump

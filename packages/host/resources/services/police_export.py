@@ -23,31 +23,30 @@ class PoliceExportService(object):
         if not stay:
             raise Exception(f"Stay {stay_id} not found")
 
-        stay_guests = self.db.table('host.stay_guest').query(
+        guests = self.db.table('host.guest').query(
             where='$stay_id=:stay_id',
             stay_id=stay_id,
-            order_by='@guest_type_id.code, @guest_id.@anagrafica_id.cognome'
+            order_by='@guest_type_id.code, @anagrafica_id.cognome'
         ).fetch()
 
         lines = []
-        for sg in stay_guests:
-            line = self._format_guest_line(stay, sg)
+        for guest in guests:
+            line = self._format_guest_line(stay, guest)
             lines.append(line)
 
         return '\n'.join(lines)
 
-    def _format_guest_line(self, stay, stay_guest):
+    def _format_guest_line(self, stay, guest):
         """
         Format a single guest line (178 characters)
         """
-        guest = self.db.table('host.guest').record(pkey=stay_guest['guest_id']).output('dict')
-        anagrafica = self.db.table('erpy_base.anagrafica').record(
+        anagrafica = self.db.table('er_core.anagrafica').record(
             pkey=guest['anagrafica_id']
         ).output('dict')
 
         # Get guest type code
         guest_type_rec = self.db.table('host.guest_type').record(
-            pkey=stay_guest['guest_type_id']
+            pkey=guest['guest_type_id']
         ).output('dict')
         guest_type = guest_type_rec.get('code', '20') if guest_type_rec else '20'
 
@@ -125,9 +124,9 @@ class PoliceExportService(object):
 
         # 15. Codice tariffa imposta soggiorno (10 chars) - optional
         tax_code = ''
-        if stay_guest.get('tourist_tax_id'):
+        if guest.get('tourist_tax_id'):
             tax_rec = self.db.table('host.tourist_tax').record(
-                pkey=stay_guest['tourist_tax_id']
+                pkey=guest['tourist_tax_id']
             ).output('dict')
             tax_code = tax_rec.get('code', '') if tax_rec else ''
         parts.append(self._pad(tax_code, 10, 'N'))

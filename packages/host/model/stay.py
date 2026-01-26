@@ -47,6 +47,11 @@ class Table(object):
         tbl.formulaColumn('stay_caption',
                          """$facility_name || ' - ' || COALESCE(TO_CHAR($check_in_date, 'DD/MM/YYYY'), 'N/A')""",
                          name_long='Stay Caption')
+        
+        tbl.formulaColumn('group_leader_name', select=dict(
+                        table='host.guest',
+                        where='$stay_id=#THIS.id AND $is_group_leader IS TRUE',
+                        columns='$full_name'), name_long='Group Leader Name')
 
     def trigger_onInserting(self, record=None, **kwargs):
         """Validate dates before insert"""

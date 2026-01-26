@@ -20,11 +20,11 @@ The Host Management System is designed for accommodation facilities (hotels, B&B
 
 ### 1. Facility Management
 - Register multiple accommodation facilities
-- Link facilities to owner/manager registry (via `erpy_base.anagrafica`)
+- Link facilities to owner/manager registry (via `erpyready.anagrafica`)
 - Categorize facilities by type (hotel, B&B, apartment, etc.)
 
 ### 2. Guest Registry
-- Complete guest information linked to `erpy_base.anagrafica`
+- Complete guest information linked to `erpyready.anagrafica`
 - Document tracking (passport, identity card) for group leaders
 - Personal data: name, surname, birth date, birthplace, citizenship
 - Automatic linkage to existing registry records
@@ -110,21 +110,9 @@ Tourist tax rates and exemptions
 #### `facility`
 Accommodation facilities registry
 - `id` (PK)
-- `anagrafica_id` (FK to `erpy_base.anagrafica`) - Owner/Manager
+- `anagrafica_id` (FK to `erpyready.anagrafica`) - Owner/Manager
 - `name` - Facility name
 - `facility_type_id` (FK to `facility_type`)
-
-#### `guest`
-Guest registry with document information
-- `id` (PK)
-- `anagrafica_id` (FK to `erpy_base.anagrafica`) - Personal data
-- `document_type_id` (FK to `document_type`) - Document type
-- `document_number` - Document number
-- `document_issued_by` - Issuing authority/place
-- `document_issue_date` - Issue date
-- `document_expiry_date` - Expiry date
-
-**Note**: Document fields are required only for group leaders (guest types 17, 18).
 
 #### `stay`
 Accommodation stays
@@ -132,30 +120,41 @@ Accommodation stays
 - `facility_id` (FK to `facility`)
 - `check_in_date` - Check-in date
 - `check_out_date` - Check-out date
+- `arrival_time` - Arrival time (optional)
+- `flight_number` - Flight number (optional)
+- `safe_code` - Safe code for apartment access (optional)
 - `nights` - **Calculated field** (check_out_date - check_in_date)
 
 **Calculated Fields**:
 - `nights`: Automatically calculated from date difference
 - `stay_caption`: Display caption combining facility name and dates
+- `group_leader_name`: Calculated from guests with leader role
 
 **Validation**:
 - Check-out date must be after check-in date
 
-#### `stay_guest` (Many-to-Many)
-Relationship between stays and guests
+#### `guest`
+Guest records for stays
 - `id` (PK)
-- `stay_id` (FK to `stay`)
-- `guest_id` (FK to `guest`)
-- `guest_type_id` (FK to `guest_type`) - **Required**
-- `tourist_tax_id` (FK to `tourist_tax`)
-- `tax_amount` - **Calculated field** (nights × tax rate)
+- `stay_id` (FK to `stay`) - Stay reference
+- `anagrafica_id` (FK to `erpyready.anagrafica`) - Personal data
+- `guest_type_id` (FK to `guest_type`) - Guest type (single, family head, group head, member)
+- `tourist_tax_id` (FK to `tourist_tax`) - Tax rate or exemption
+- `document_type_id` (FK to `document_type`) - Document type
+- `document_number` - Document number
+- `document_issued_by` - Issuing authority/place
+- `document_issue_date` - Issue date
+- `document_expiry_date` - Expiry date
+- `tax_amount` - **Calculated field** (nights × tax rate per municipality)
 
 **Business Logic**:
-- Each stay must have at least one group leader (guest_type code '17' or '18')
-- Guest type determines the role: single guest, family/group head, or member
-- Tax amount is automatically calculated based on:
+- Each guest belongs to one stay (one-to-many relationship)
+- Document fields are required only for group leaders (guest types 17, 18)
+- If the same person returns, create a new guest record referencing the same anagrafica
+- Each stay should have at least one group leader (guest_type code '17' or '18')
+- Tax amount is automatically calculated via trigger based on:
   - Number of nights from stay
-  - Tax rate from tourist_tax
+  - Tax rate from tourist_tax for the facility's municipality
   - Exemptions (tax_rate = 0)
 
 ## Installation
@@ -165,7 +164,7 @@ Relationship between stays and guests
    cp -r host /path/to/erpy_projects/your_instance/packages/
    ```
 
-2. The package requires `erpy_base` for the anagrafica (registry) integration
+2. The package requires `erpyready` for the anagrafica (registry) integration
 
 3. Restart your Genropy instance to load the package
 
@@ -198,20 +197,19 @@ Relationship between stays and guests
    - Link to existing anagrafica record (owner/manager)
    - Specify facility name and type
 
-3. **Register Guests**
-   - Link to existing anagrafica record (or create new)
-   - For group leaders (types 17, 18): enter document information
-
-4. **Create Stays**
+3. **Create Stays**
    - Select facility
    - Enter check-in and check-out dates (nights calculated automatically)
+   - Optional: arrival time, flight number, safe code
    - Add guests to the stay:
+     - Link to existing anagrafica or create new inline
      - Select guest_type for each guest (16=single, 17=family head, 18=group head, 19=family member, 20=group member)
      - At least one guest must be a leader (type 17 or 18)
+     - For group leaders: enter document information
      - Assign tourist tax rate for each guest
-     - Tax amount calculated automatically
+     - Tax amount calculated automatically based on nights and facility municipality
 
-5. **Export Police Report**
+4. **Export Police Report**
    - From the stay form, click "Export TXT for Police"
    - Generated file contains 178-character lines per guest
    - Format complies with Italian police reporting requirements
@@ -245,10 +243,10 @@ The export generates a fixed-width text file (178 characters per guest) with the
 
 ## Integration with Erpy Base
 
-The package integrates with `erpy_base` for:
+The package integrates with `erpyready` for:
 
 ### Anagrafica (Registry)
-Guest and facility owner data is stored in `erpy_base.anagrafica` which includes:
+Guest and facility owner data is stored in `erpyready.anagrafica` which includes:
 - `cognome` (surname)
 - `nome` (name)
 - `ragione_sociale` (full name)
@@ -305,13 +303,17 @@ host/
 ### Key Design Decisions
 
 1. **Anagrafica Integration**: Personal data stored in centralized registry to avoid duplication
-2. **Guest Type System**: Uses official Italian codes (16-20) to classify guests
-3. **Group Leader Model**: Only group leaders (types 17, 18) require document tracking
-4. **Calculated Fields**: Nights and tax amounts calculated automatically
-5. **Stay-centric View**: UI shows stays with group leader, not individual guests
-6. **Italian Compliance**:
-   - 5 official guest types (Tipo Alloggiato)
+2. **Guest-Stay Relationship**: Each guest belongs to one stay (one-to-many). If the same person returns, create a new guest record referencing the same anagrafica
+3. **Guest Type System**: Uses official Italian codes (16-20) to classify guests with mandatory sysRecord
+4. **Group Leader Model**: Only group leaders (types 17, 18) require document tracking
+5. **Calculated Fields**: Nights and tax amounts calculated automatically via triggers
+6. **Tourist Tax Management**: Tax rates configured per municipality using bag structure; 9 official exemption codes as mandatory sysRecord
+7. **Stay-centric View**: UI shows stays with group leader, not individual guests
+8. **Lookup Tables as Code-based**: All lookup tables use `code` as primary key instead of auto-generated id
+9. **Italian Compliance**:
+   - 5 official guest types (Tipo Alloggiato) - mandatory sysRecord
    - 96 official document types
+   - 9 official tourist tax exemption codes - mandatory sysRecord
    - Police export follows official ISTAT format (178 chars)
 
 ## API / Services
@@ -342,7 +344,7 @@ file_path = export_stay_to_file(db, stay_id, '/path/to/output.txt')
 ## Requirements
 
 - Genropy framework
-- Erpy base package (`erpy_base`)
+- Erpy base package (`erpyready`)
 - PostgreSQL or compatible database
 - Python 3.7+
 
@@ -356,6 +358,13 @@ For issues, questions, or contributions, contact:
 - Davide Paci (@dgpaci)
 
 ## Version History
+
+- **2.0.0** (2026-01-26): Major refactoring
+  - Simplified data model: guest belongs to one stay (one-to-many instead of many-to-many)
+  - Integration with `er_core:erpy_ready` instead of `erpy:erpy_base`
+  - All lookup tables use `code` as primary key
+  - Mandatory sysRecord for guest types and tourist tax codes
+  - Improved tax calculation with municipality-specific rates via bag structure
 
 - **1.0.0** (2026-01-23): Initial release
   - Complete facility and guest management
