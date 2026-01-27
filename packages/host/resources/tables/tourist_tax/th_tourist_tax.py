@@ -29,7 +29,7 @@ class Form(BaseComponent):
 
         # Center section - amounts per municipality (baggrid)
         center = bc.contentPane(region='center', margin='2px')
-        center.div('Amounts per Municipality', font_weight='bold', margin_bottom='5px')
+        center.div('!![en]Amounts per Municipality', font_weight='bold', margin_bottom='5px')
         center.bagGrid(
             storepath='.record.amounts',
             struct=self._bagGridStruct,
@@ -40,11 +40,11 @@ class Form(BaseComponent):
     def _bagGridStruct(self, struct):
         """Define baggrid structure for amounts per municipality"""
         r = struct.view().rows()
-        r.cell('comune_id', name='Municipality', width='30em',
+        r.cell('comune_id', name='!![en]Municipality', width='30em',
               dtype='L', size='22',
               dbtable='glbl.comune',
               validate_notnull=True)
-        r.cell('amount', name='Amount (EUR)', width='15em',
+        r.cell('amount', name='!![en]Amount (EUR)', width='15em',
               dtype='N', format='#,###.00',
               validate_notnull=True)
 

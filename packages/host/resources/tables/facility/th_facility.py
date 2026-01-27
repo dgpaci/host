@@ -8,8 +8,8 @@ class View(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
         r.fieldcell('name', width='30em')
-        r.fieldcell('facility_type_description', width='15em', name='Type')
-        r.fieldcell('comune_denominazione', width='20em', name='Municipality')
+        r.fieldcell('facility_type_description', width='15em', name='!![en]Type')
+        r.fieldcell('comune_denominazione', width='20em', name='!![en]Municipality')
         return struct
 
     def th_order(self):
@@ -24,16 +24,16 @@ class Form(BaseComponent):
         top = bc.borderContainer(region='top', datapath='.record', height='120px')
         fb = top.contentPane(region='center').formlet(cols=2, border_spacing='4px')
         fb.field('name', colspan=2)
-        fb.field('facility_type_id', hasDownArrow=True)
+        fb.field('facility_type_code', hasDownArrow=True)
         fb.field('max_beds')
-        
+
         top.contentPane(region='right', width='400px').linkerBox('anagrafica_id',
                                                                  formResource='Form',
                                                                  dialog_windowRatio=.8)
 
         # Bottom section for related stays
         center = bc.tabContainer(region='center', margin='2px')
-        stays_tab = center.contentPane(title='Stays')
+        stays_tab = center.contentPane(title='!![en]Stays')
         stays_tab.dialogTableHandler(relation='@stays',
                                      viewResource='ViewFromFacility',
                                      formResource='FormFromFacility')

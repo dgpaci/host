@@ -7,13 +7,13 @@ from gnr.web.gnrbaseclasses import BaseComponent
 class View(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
-        r.fieldcell('facility_name', width='25em', name='Facility')
-        r.fieldcell('check_in_date', width='10em', name='Check-in')
-        r.fieldcell('check_out_date', width='10em', name='Check-out')
+        r.fieldcell('facility_name', width='25em', name='!![en]Facility')
+        r.fieldcell('check_in_date', width='10em', name='!![en]Check-in')
+        r.fieldcell('check_out_date', width='10em', name='!![en]Check-out')
         r.fieldcell('nights', width='8em')
-        r.fieldcell('arrival_time', width='10em', name='Arrival')
-        r.fieldcell('flight_number', width='12em', name='Flight')
-        r.fieldcell('group_leader_name', width='auto', name='Group Leader')
+        r.fieldcell('arrival_time', width='10em', name='!![en]Arrival')
+        r.fieldcell('flight_number', width='12em', name='!![en]Flight')
+        r.fieldcell('group_leader_name', width='auto', name='!![en]Group Leader')
 
     def th_order(self):
         return 'check_in_date DESC'
@@ -25,10 +25,10 @@ class View(BaseComponent):
 class ViewFromFacility(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
-        r.fieldcell('check_in_date', width='10em', name='Check-in')
-        r.fieldcell('check_out_date', width='10em', name='Check-out')
+        r.fieldcell('check_in_date', width='10em', name='!![en]Check-in')
+        r.fieldcell('check_out_date', width='10em', name='!![en]Check-out')
         r.fieldcell('nights', width='8em')
-        r.fieldcell('group_leader_name', width='auto', name='Group Leader')
+        r.fieldcell('group_leader_name', width='auto', name='!![en]Group Leader')
         return struct
 
     def th_order(self):
@@ -40,7 +40,7 @@ class Form(BaseComponent):
         self.stayInformations(bc.contentPane(region='top', height='120px', datapath='.record'))
         
         center = bc.tabContainer(region='center', margin='2px')
-        self.guestsTab(center.contentPane(title='Guests'))
+        self.guestsTab(center.contentPane(title='!![en]Guests'))
         self.exportTab(center)
 
     def stayInformations(self, pane):
@@ -58,9 +58,9 @@ class Form(BaseComponent):
                                       formResource='FormFromStay')
         
     def exportTab(self, center):
-        export_tab = center.contentPane(title='Export Police Report')
+        export_tab = center.contentPane(title='!![en]Export Police Report')
         export_fb = export_tab.div(margin='10px')
-        export_fb.button('Export TXT for Police',
+        export_fb.button('!![en]Export TXT for Police',
                         fire='.export_police_report',
                         action='this.publishSelection("export_police_report");')
 
@@ -75,17 +75,18 @@ class FormFromFacility(BaseComponent):
         self.stayInformations(bc.contentPane(region='top', height='100px', datapath='.record'))
         
         center = bc.tabContainer(region='center', margin='2px')
-        self.guestsTab(center.contentPane(title='Guests'))
+        self.guestsTab(center.contentPane(title='!![en]Guests'))
 
     def stayInformations(self, pane):
-        fb = pane.formlet(cols=3, border_spacing='4px')
+        fb = pane.formlet(cols=4, border_spacing='4px')
         fb.field('check_in_date', width='12em')
         fb.field('check_out_date', width='12em')
         fb.field('arrival_time', width='10em')
         fb.field('flight_number', width='15em')
-        fb.field('safe_code', width='8em')
+        
         fb.field('adults_count', width='4em')
         fb.field('children_count', width='4em')
+        fb.field('safe_code', width='8em')
         
     def guestsTab(self, guests_tab):
         guests_tab.dialogTableHandler(relation='@guests',

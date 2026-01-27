@@ -1,0 +1,169 @@
+<?xml version="1.0" ?>
+<GenRoBag>
+	<menu path="menu.py" ext="py">
+		<en_host_management base="Host Management" it="Gestione degli host"/>
+		<en_master_data base="Master Data" it="Dati principali"/>
+		<en_facilities base="Facilities" it="Strutture"/>
+		<en_guests base="Guests" it="Ospiti"/>
+		<en_tourist_tax_rates base="Tourist Tax Rates" it="Aliquote della tassa turistica"/>
+		<en_operations base="Operations" it="Operazioni"/>
+		<en_stays base="Stays" it="Soggiorni"/>
+		<en_settings base="Settings" it="Impostazioni"/>
+	</menu>
+
+	<model>
+		<document_type path="model/document_type.py" ext="py">
+			<en_document_type base="Document Type" it="Tipo di documento"/>
+				<en_document_types base="Document Types" it="Tipi di documenti"/>
+				<en_code base="Code" en="Code" it="Codice"/>
+				<en_description base="Description" en="Description" it="Descrizione"/>
+		</document_type>
+		<facility path="model/facility.py" ext="py">
+			<en_facility base="Facility" it="Struttura"/>
+				<en_facilities base="Facilities" it="Strutture"/>
+				<en_owner_manager base="Owner/Manager" it="Proprietario/Gestore"/>
+				<en_facility_name base="Facility Name" it="Nome della struttura"/>
+				<en_max_beds base="Max Beds" it="Letti Max"/>
+				<en_beds base="Beds" it="Letti"/>
+				<en_facility_type base="Facility Type" it="Tipo di struttura"/>
+				<en_municipality base="Municipality" it="Municipalità"/>
+				<en_type_description base="Type Description" it="Descrizione del tipo"/>
+				<en_municipality_name base="Municipality Name" it="Nome del comune"/>
+				<en_province base="Province" it="Provincia"/>
+		</facility>
+		<facility_type path="model/facility_type.py" ext="py">
+			<en_facility_type base="Facility Type" it="Tipo di struttura"/>
+				<en_facility_types base="Facility Types" it="Tipi di strutture"/>
+				<en_code base="Code" en="Code" it="Codice"/>
+				<en_description base="Description" en="Description" it="Descrizione"/>
+		</facility_type>
+		<guest path="model/guest.py" ext="py">
+			<en_guest base="Guest" it="Ospite"/>
+				<en_guests base="Guests" it="Ospiti"/>
+				<en_stay base="Stay" it="Rimanere"/>
+				<en_guest_registry base="Guest Registry" it="Registro degli ospiti"/>
+				<en_guest_type base="Guest Type" it="Tipo di ospite"/>
+				<en_tourist_tax_rate base="Tourist Tax Rate" it="Aliquota della tassa turistica"/>
+				<en_document_type base="Document Type" it="Tipo di documento"/>
+				<en_document_number base="Document Number" it="Numero del documento"/>
+				<en_document_issued_by base="Document Issued By" it="Documento rilasciato da"/>
+				<en_issued_by base="Issued By" it="Emesso da"/>
+				<en_document_issue_date base="Document Issue Date" it="Data di emissione del documento"/>
+				<en_issue_date base="Issue Date" it="Data di emissione"/>
+				<en_document_expiry_date base="Document Expiry Date" it="Data di scadenza del documento"/>
+				<en_expiry_date base="Expiry Date" it="Data di scadenza"/>
+				<en_total_tax_amount base="Total Tax Amount" it="Importo totale dell'imposta"/>
+				<en_tax_amount base="Tax Amount" it="Importo dell'imposta"/>
+				<en_surname base="Surname" it="Cognome"/>
+				<en_name base="Name" de="Name" en="Name" fr="Nom" it="Nome"/>
+				<en_full_name base="Full Name" it="Nome completo" en="Full Name"/>
+				<en_gender base="Gender" it="Genere"/>
+				<en_birth_date base="Birth Date" it="Data di nascita"/>
+				<en_birth_place base="Birth Place" it="Luogo di nascita"/>
+				<en_birth_province base="Birth Province" it="Provincia di nascita"/>
+				<en_birth_country base="Birth Country" it="Paese di nascita"/>
+				<en_citizenship base="Citizenship" it="Cittadinanza"/>
+				<en_guest_information base="Guest Information" it="Informazioni per gli ospiti"/>
+				<en_is_group_leader base="Is Group Leader" it="È capogruppo"/>
+				<en_doc_type_description base="Doc Type Description" it="Descrizione del tipo di documento"/>
+				<en_tax_description base="Tax Description" it="Descrizione dell'imposta"/>
+				<en_nights base="Nights" it="Notti"/>
+				<en_check_in base="Check-in" it="Arrivo"/>
+				<en_check_out base="Check-out" it="Partenza"/>
+				<en_facility base="Facility" it="Struttura"/>
+				<en_facility_id base="Facility ID" it="ID struttura"/>
+				<en_facility_municipality_id base="Facility Municipality ID" it="ID del comune della struttura"/>
+		</guest>
+		<guest_type path="model/guest_type.py" ext="py">
+			<en_guest_type base="Guest Type" it="Tipo di ospite"/>
+				<en_guest_types base="Guest Types" it="Tipi di ospiti"/>
+				<en_code base="Code" en="Code" it="Codice"/>
+				<en_description base="Description" en="Description" it="Descrizione"/>
+				<en_is_group_leader base="Is Group Leader" it="È capogruppo"/>
+		</guest_type>
+		<stay path="model/stay.py" ext="py">
+			<en_stay base="Stay" it="Rimanere"/>
+				<en_stays base="Stays" it="Soggiorni"/>
+				<en_facility base="Facility" it="Struttura"/>
+				<en_check_in_date base="Check-in Date" it="Data check-in"/>
+				<en_check_in base="Check-in" it="Arrivo"/>
+				<en_check_out_date base="Check-out Date" it="Data check-out"/>
+				<en_check_out base="Check-out" it="Partenza"/>
+				<en_arrival_time base="Arrival Time" it="Ora di arrivo"/>
+				<en_arrival base="Arrival" it="Arrivo"/>
+				<en_flight_number base="Flight Number" it="Numero del volo"/>
+				<en_flight base="Flight" it="Volo"/>
+				<en_safe_code base="Safe Code" it="Codice sicuro"/>
+				<en_safe base="Safe" it="Sicuro"/>
+				<en_number_of_adults base="Number of Adults" it="Numero di adulti"/>
+				<en_adults base="Adults" it="Adulti"/>
+				<en_number_of_children base="Number of Children" it="Numero di bambini"/>
+				<en_children base="Children" de="Kinder" en="Children" fr="Enfants" it="Bambini"/>
+				<en_number_of_nights base="Number of Nights" it="Numero di notti"/>
+				<en_nights base="Nights" it="Notti"/>
+				<en_total_guests base="Total Guests" it="Ospiti totali"/>
+				<en_guests base="Guests" it="Ospiti"/>
+				<en_max_beds base="Max Beds" it="Letti Max"/>
+				<en_facility_name base="Facility Name" it="Nome della struttura"/>
+				<en_facility_type base="Facility Type" it="Tipo di struttura"/>
+				<en_stay_caption base="Stay Caption" it="Didascalia del soggiorno"/>
+				<en_group_leader base="Group Leader" it="Leader del gruppo"/>
+				<en_group_leader_name base="Group Leader Name" it="Nome del capogruppo"/>
+		</stay>
+		<tourist_tax path="model/tourist_tax.py" ext="py">
+			<en_tourist_tax_rate base="Tourist Tax Rate" it="Aliquota della tassa turistica"/>
+				<en_tourist_tax_rates base="Tourist Tax Rates" it="Aliquote della tassa turistica"/>
+				<en_code base="Code" en="Code" it="Codice"/>
+				<en_description base="Description" en="Description" it="Descrizione"/>
+				<en_amounts_per_municipality base="Amounts per Municipality" it="Importi per comune"/>
+				<en_amounts base="Amounts" it="Importi"/>
+		</tourist_tax>
+	</model>
+
+	<resources>
+		<tables>
+			<facility>
+				<th_facility path="resources/tables/facility/th_facility.py" ext="py">
+					<en_type fr="Type" de="Art" en="Type" it="Tipo" base="Type"/>
+								<en_municipality base="Municipality" it="Municipalità"/>
+								<en_stays base="Stays" it="Soggiorni"/>
+				</th_facility>
+			</facility>
+				<guest>
+				<th_guest path="resources/tables/guest/th_guest.py" ext="py">
+					<en_facility base="Facility" it="Struttura"/>
+								<en_check_in base="Check-in" it="Arrivo"/>
+								<en_check_out base="Check-out" it="Partenza"/>
+								<en_guest base="Guest" it="Ospite"/>
+								<en_type fr="Type" de="Art" en="Type" it="Tipo" base="Type"/>
+								<en_tax base="Tax" it="Imposta"/>
+								<en_birth_date base="Birth Date" it="Data di nascita"/>
+								<en_tax_amount base="Tax Amount" it="Importo dell'imposta"/>
+								<en_document_information base="Document Information" it="Informazioni sul documento"/>
+								<en_country_of_residence base="Country of Residence" it="Paese di residenza"/>
+								<en_province_of_residence base="Province of Residence" it="Provincia di residenza"/>
+				</th_guest>
+			</guest>
+				<stay>
+				<th_stay path="resources/tables/stay/th_stay.py" ext="py">
+					<en_facility base="Facility" it="Struttura"/>
+								<en_check_in base="Check-in" it="Arrivo"/>
+								<en_check_out base="Check-out" it="Partenza"/>
+								<en_arrival base="Arrival" it="Arrivo"/>
+								<en_flight base="Flight" it="Volo"/>
+								<en_group_leader base="Group Leader" it="Leader del gruppo"/>
+								<en_guests base="Guests" it="Ospiti"/>
+								<en_export_police_report base="Export Police Report" it="Rapporto della polizia delle esportazioni"/>
+								<en_export_txt_for_police base="Export TXT for Police" it="Esporta TXT per Police"/>
+				</th_stay>
+			</stay>
+				<tourist_tax>
+				<th_tourist_tax path="resources/tables/tourist_tax/th_tourist_tax.py" ext="py">
+					<en_amounts_per_municipality base="Amounts per Municipality" it="Importi per comune"/>
+								<en_municipality base="Municipality" it="Municipalità"/>
+								<en_amount_eur_ base="Amount (EUR)" it="Importo (EUR)"/>
+				</th_tourist_tax>
+			</tourist_tax>
+		</tables>
+	</resources>
+</GenRoBag>

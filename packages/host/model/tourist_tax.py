@@ -10,17 +10,17 @@ class Table(object):
         tbl = pkg.table(
             'tourist_tax',
             pkey='code',
-            name_long='Tourist Tax Rate',
-            name_plural='Tourist Tax Rates',
+            name_long='!![en]Tourist Tax Rate',
+            name_plural='!![en]Tourist Tax Rates',
             caption_field='description',
         )
 
         self.sysFields(tbl, id=False)
 
-        tbl.column('code', size=':15', name_long='Code')
-        tbl.column('description', size=':200', name_long='Description', validate_notnull=True)
-        tbl.column('amounts', dtype='X', name_long='Amounts per Municipality',
-                   name_short='Amounts')
+        tbl.column('code', size=':15', name_long='!![en]Code')
+        tbl.column('description', size=':200', name_long='!![en]Description', validate_notnull=True)
+        tbl.column('amounts', dtype='X', name_long='!![en]Amounts per Municipality',
+                   name_short='!![en]Amounts')
 
     @metadata(mandatory=True)
     def sysRecord_MINOR_EX(self):

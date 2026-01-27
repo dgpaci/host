@@ -10,17 +10,17 @@ class Table(object):
         tbl = pkg.table(
             'guest_type',
             pkey='code',
-            name_long='Guest Type',
-            name_plural='Guest Types',
+            name_long='!![en]Guest Type',
+            name_plural='!![en]Guest Types',
             caption_field='description',
             lookup=True
         )
 
         self.sysFields(tbl, id=False)
 
-        tbl.column('code', size=':2', name_long='Code')
-        tbl.column('description', size=':50', name_long='Description', validate_notnull=True)
-        tbl.column('is_leader', dtype='B', name_long='Is Group Leader')
+        tbl.column('code', size=':2', name_long='!![en]Code')
+        tbl.column('description', size=':50', name_long='!![en]Description', validate_notnull=True)
+        tbl.column('is_leader', dtype='B', name_long='!![en]Is Group Leader')
 
 
     @metadata(mandatory=True)

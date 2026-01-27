@@ -10,16 +10,16 @@ class Table(object):
         tbl = pkg.table(
             'document_type',
             pkey='code',
-            name_long='Document Type',
-            name_plural='Document Types',
+            name_long='!![en]Document Type',
+            name_plural='!![en]Document Types',
             caption_field='description',
             lookup=True
         )
 
         self.sysFields(tbl, id=False)
 
-        tbl.column('code', size=':10', name_long='Code')
-        tbl.column('description', size=':50', name_long='Description', validate_notnull=True)
+        tbl.column('code', size=':10', name_long='!![en]Code')
+        tbl.column('description', size=':50', name_long='!![en]Description', validate_notnull=True)
 
     @metadata(mandatory=True)
     def sysRecord_IDENT(self):

@@ -10,16 +10,16 @@ class Table(object):
         tbl = pkg.table(
             'facility_type',
             pkey='code',
-            name_long='Facility Type',
-            name_plural='Facility Types',
+            name_long='!![en]Facility Type',
+            name_plural='!![en]Facility Types',
             caption_field='description',
             lookup=True
         )
 
         self.sysFields(tbl, id=False)
 
-        tbl.column('code', size=':10', name_long='Code')
-        tbl.column('description', size=':50', name_long='Description', validate_notnull=True)
+        tbl.column('code', size=':10', name_long='!![en]Code')
+        tbl.column('description', size=':50', name_long='!![en]Description', validate_notnull=True)
 
     @metadata(mandatory=True)
     def sysRecord_HOTEL(self):

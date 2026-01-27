@@ -7,12 +7,12 @@ from gnr.web.gnrbaseclasses import BaseComponent
 class View(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
-        r.fieldcell('facility_name', width='20em', name='Facility')
-        r.fieldcell('stay_check_in', width='10em', name='Check-in')
-        r.fieldcell('stay_check_out', width='10em', name='Check-out')
-        r.fieldcell('full_name', width='25em', name='Guest')
-        r.fieldcell('guest_type_description', width='15em', name='Type')
-        r.fieldcell('tax_amount', width='100%', name='Tax', dtype='N')
+        r.fieldcell('facility_name', width='20em', name='!![en]Facility')
+        r.fieldcell('stay_check_in', width='10em', name='!![en]Check-in')
+        r.fieldcell('stay_check_out', width='10em', name='!![en]Check-out')
+        r.fieldcell('full_name', width='25em', name='!![en]Guest')
+        r.fieldcell('guest_type_description', width='15em', name='!![en]Type')
+        r.fieldcell('tax_amount', width='100%', name='!![en]Tax', dtype='N')
         return struct
 
     def th_order(self):
@@ -25,10 +25,10 @@ class View(BaseComponent):
 class ViewFromStay(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
-        r.fieldcell('full_name', width='20em', name='Guest')
-        r.fieldcell('guest_type_description', width='10em', name='Type')
-        r.fieldcell('birth_date', width='6em', name='Birth Date')
-        r.fieldcell('tax_amount', width='10em', name='Tax Amount', dtype='N', totalize=True)
+        r.fieldcell('full_name', width='20em', name='!![en]Guest')
+        r.fieldcell('guest_type_description', width='10em', name='!![en]Type')
+        r.fieldcell('birth_date', width='6em', name='!![en]Birth Date')
+        r.fieldcell('tax_amount', width='10em', name='!![en]Tax Amount', dtype='N', totalize=True)
         return struct
 
     def th_order(self):
@@ -49,14 +49,14 @@ class Form(BaseComponent):
                 hasDownArrow=True)
 
         # Guest type and tax
-        fb.field('guest_type_id', width='30em', hasDownArrow=True)
-        fb.field('tourist_tax_id', width='40em', colspan=2, hasDownArrow=True)
+        fb.field('guest_type_code', width='30em', hasDownArrow=True)
+        fb.field('tourist_tax_code', width='40em', colspan=2, hasDownArrow=True)
         fb.field('tax_amount', width='15em', readonly=True)
 
         # Document information section
-        fb.div('Document Information', colspan=2, font_weight='bold',
+        fb.div('!![en]Document Information', colspan=2, font_weight='bold',
               margin_top='10px', margin_bottom='5px')
-        fb.field('document_type_id', width='25em')
+        fb.field('document_type_code', width='25em')
         fb.field('document_number', width='25em')
         fb.field('document_issued_by', width='25em')
         fb.field('document_issue_date', width='12em')
@@ -82,23 +82,23 @@ class FormFromStay(BaseComponent):
         fl.field('luogo_nascita')
         fl.field('nazione_nascita')
         fl.field('cittadinanza')
-        fl.field('nazione', lbl='Country of Residence', validate_notnull=True)
-        fl.field('provincia', hidden='^.nazione?=#v!="IT"', 
-                                lbl='Province of Residence', 
-                                validate_notnull='^.@guest_type_id.is_leader')
+        fl.field('nazione', lbl='!![en]Country of Residence', validate_notnull=True)
+        fl.field('provincia', hidden='^.nazione?=#v!="IT"',
+                                lbl='!![en]Province of Residence',
+                                validate_notnull='^.@guest_type_code.is_leader')
                  
     def guestInformations(self, pane):
         fl = pane.formlet(cols=2)
 
         # Guest type and tax
-        fl.field('guest_type_id', width='30em', hasDownArrow=True)
-        fl.field('tourist_tax_id', width='40em', colspan=2, hasDownArrow=True)
+        fl.field('guest_type_code', width='30em', hasDownArrow=True)
+        fl.field('tourist_tax_code', width='40em', colspan=2, hasDownArrow=True)
         fl.field('tax_amount', width='15em', readonly=True)
 
         # Document information section
-        fl.div('Document Information', colspan=2, font_weight='bold',
+        fl.div('!![en]Document Information', colspan=2, font_weight='bold',
                     margin_top='10px', margin_bottom='5px')
-        fl.field('document_type_id', width='25em')
+        fl.field('document_type_code', width='25em')
         fl.field('document_number', width='25em')
         fl.field('document_issued_by', width='25em')
         fl.field('document_issue_date', width='12em')
