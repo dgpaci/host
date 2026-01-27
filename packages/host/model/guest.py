@@ -23,16 +23,16 @@ class Table(object):
             .relation('er_core.anagrafica.id', mode='foreignkey',
                      relation_name='guest_records', onDelete='raise')
 
-        tbl.column('guest_type_id', size=':2', name_long='Guest Type', validate_notnull=True)\
+        tbl.column('guest_type_code', size=':2', name_long='Guest Type', validate_notnull=True)\
             .relation('host.guest_type.code', mode='foreignkey',
                      relation_name='guests', onDelete='raise')
 
-        tbl.column('tourist_tax_id', size=':15', name_long='Tourist Tax Rate')\
+        tbl.column('tourist_tax_code', size=':15', name_long='Tourist Tax Rate')\
             .relation('host.tourist_tax.code', mode='foreignkey',
                      relation_name='guests', onDelete='setnull')
 
         # Document fields (required only for group leaders)
-        tbl.column('document_type_id', size=':10', name_long='Document Type')\
+        tbl.column('document_type_code', size=':10', name_long='Document Type')\
             .relation('host.document_type.code', mode='foreignkey',
                      relation_name='guests', onDelete='setnull')
 
@@ -62,15 +62,13 @@ class Table(object):
         tbl.aliasColumn('citizenship', '@anagrafica_id.cittadinanza', name_long='Citizenship')
 
         guest = tbl.colgroup('guest', name_long='Guest Information')
-        guest.aliasColumn('guest_type_code', '@guest_type_id.code', name_long='Guest Type Code')
-        guest.aliasColumn('guest_type_description', '@guest_type_id.description',
+        guest.aliasColumn('guest_type_description', '@guest_type_code.description',
                        name_long='Guest Type')
-        guest.aliasColumn('is_group_leader', '@guest_type_id.is_leader',
+        guest.aliasColumn('is_group_leader', '@guest_type_code.is_leader', static=True,
                        name_long='Is Group Leader')
-        guest.aliasColumn('document_type_code', '@document_type_id.code', name_long='Doc Type Code')
-        guest.aliasColumn('document_type_description', '@document_type_id.description',
+        guest.aliasColumn('document_type_description', '@document_type_code.description',
                        name_long='Doc Type Description')
-        tbl.aliasColumn('tax_description', '@tourist_tax_id.description', name_long='Tax Description')
+        tbl.aliasColumn('tax_description', '@tourist_tax_code.description', name_long='Tax Description')
 
         # Alias columns from stay
         tbl.aliasColumn('stay_nights', '@stay_id.nights', name_long='Nights')
@@ -95,9 +93,9 @@ class Table(object):
         - Tax rate from tourist_tax (per municipality)
         """
         stay_id = record.get('stay_id')
-        tourist_tax_id = record.get('tourist_tax_id')
+        tourist_tax_code = record.get('tourist_tax_code')
 
-        if not (stay_id and tourist_tax_id):
+        if not (stay_id and tourist_tax_code):
             record['tax_amount'] = 0
             return
 
@@ -126,7 +124,7 @@ class Table(object):
             return
 
         # Get tax record with amounts bag
-        tax = self.db.table('host.tourist_tax').record(pkey=tourist_tax_id).output('bag')
+        tax = self.db.table('host.tourist_tax').record(pkey=tourist_tax_code).output('bag')
         if not tax:
             record['tax_amount'] = 0
             return

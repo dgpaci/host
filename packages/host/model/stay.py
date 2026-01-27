@@ -23,7 +23,7 @@ class Table(object):
                    name_short='Check-in')
 
         tbl.column('check_out_date', dtype='D', name_long='Check-out Date', validate_notnull=True,
-                   name_short='Check-out')
+                   name_short='Check-out', validate_min='$check_in_date')
 
         tbl.column('arrival_time', dtype='H', name_long='Arrival Time',
                    name_short='Arrival')
@@ -34,37 +34,33 @@ class Table(object):
         tbl.column('safe_code', size='4', name_long='Safe Code',
                    name_short='Safe')
 
-        # Calculated field: number of nights
+        tbl.column('adults_count', dtype='I', name_long='Number of Adults',
+                   name_short='Adults', validate_notnull=True, default=1)
+        tbl.column('children_count', dtype='I', name_long='Number of Children',
+                   name_short='Children', validate_notnull=True, default=0)
+
         tbl.formulaColumn('nights', "($check_out_date - $check_in_date)",
                          dtype='I', name_long='Number of Nights', name_short='Nights')
 
+        tbl.formulaColumn('total_guests', "COALESCE($adults_count, 0) + COALESCE($children_count, 0)",
+                         dtype='I', name_long='Total Guests', name_short='Guests')
+
         # Alias columns
+        tbl.aliasColumn('max_beds', '@facility_id.max_beds', name_long='Max Beds')
         tbl.aliasColumn('facility_name', '@facility_id.name', name_long='Facility Name')
-        tbl.aliasColumn('facility_type', '@facility_id.@facility_type_id.description',
+        tbl.aliasColumn('facility_type', '@facility_id.@facility_type_code.description',
                        name_long='Facility Type')
 
-        # Virtual column for caption (will be set via formula)
         tbl.formulaColumn('stay_caption',
                          """$facility_name || ' - ' || COALESCE(TO_CHAR($check_in_date, 'DD/MM/YYYY'), 'N/A')""",
                          name_long='Stay Caption')
         
-        tbl.formulaColumn('group_leader_name', select=dict(
-                        table='host.guest',
-                        where='$stay_id=#THIS.id AND $is_group_leader IS TRUE',
-                        columns='$full_name'), name_long='Group Leader Name')
-
-    def trigger_onInserting(self, record=None, **kwargs):
-        """Validate dates before insert"""
-        self._validate_dates(record)
-
-    def trigger_onUpdating(self, record=None, old_record=None, **kwargs):
-        """Validate dates before update"""
-        self._validate_dates(record)
-
-    def _validate_dates(self, record):
-        """Ensure check-out date is after check-in date"""
-        check_in = record.get('check_in_date')
-        check_out = record.get('check_out_date')
-
-        if check_in and check_out and check_out <= check_in:
-            raise Exception("Check-out date must be after check-in date")
+        #tbl.joinColumn('group_leader_id', name_long='Group Leader').relation('host.guest.id',
+        #                cnd='@group_leader_id.stay_id=$id AND @group_leader_id.@guest_type_id.is_leader IS TRUE'
+        #                ) #DP It doesn't work like this
+        tbl.formulaColumn('group_leader_id', select=dict(table='host.guest',
+                                                         where='$stay_id=#THIS.id AND $guest_is_leader IS TRUE',
+                                                         column='$id', limit=1), name_long='Group Leader'
+                          ).relation('host.guest.id', one_one='*')
+        tbl.aliasColumn('group_leader_name', '@group_leader_id.full_name',
+                       name_long='Group Leader Name')

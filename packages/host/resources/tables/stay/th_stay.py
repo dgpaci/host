@@ -19,7 +19,8 @@ class View(BaseComponent):
         return 'check_in_date DESC'
 
     def th_query(self):
-        return dict(column='check_in_date', op='>=', val='')
+        return dict(column='check_in_date', op='greater', val='')
+
 
 class ViewFromFacility(BaseComponent):
     def th_struct(self, struct):
@@ -83,6 +84,8 @@ class FormFromFacility(BaseComponent):
         fb.field('arrival_time', width='10em')
         fb.field('flight_number', width='15em')
         fb.field('safe_code', width='8em')
+        fb.field('adults_count', width='4em')
+        fb.field('children_count', width='4em')
         
     def guestsTab(self, guests_tab):
         guests_tab.dialogTableHandler(relation='@guests',
