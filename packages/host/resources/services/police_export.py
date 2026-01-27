@@ -26,7 +26,7 @@ class PoliceExportService(object):
         guests = self.db.table('host.guest').query(
             where='$stay_id=:stay_id',
             stay_id=stay_id,
-            order_by='@guest_type_id.code, @anagrafica_id.cognome'
+            order_by='@guest_type_code.code, @anagrafica_id.cognome'
         ).fetch()
 
         lines = []
@@ -46,7 +46,7 @@ class PoliceExportService(object):
 
         # Get guest type code
         guest_type_rec = self.db.table('host.guest_type').record(
-            pkey=guest['guest_type_id']
+            pkey=guest['guest_type_code']
         ).output('dict')
         guest_type = guest_type_rec.get('code', '20') if guest_type_rec else '20'
 
@@ -107,9 +107,9 @@ class PoliceExportService(object):
 
         # 12. Tipo di Documento (5 chars)
         doc_type = ''
-        if guest.get('document_type_id'):
+        if guest.get('document_type_code'):
             doc_type_rec = self.db.table('host.document_type').record(
-                pkey=guest['document_type_id']
+                pkey=guest['document_type_code']
             ).output('dict')
             doc_type = doc_type_rec.get('code', '') if doc_type_rec else ''
         parts.append(self._pad(doc_type, 5, 'AN'))
@@ -124,9 +124,9 @@ class PoliceExportService(object):
 
         # 15. Codice tariffa imposta soggiorno (10 chars) - optional
         tax_code = ''
-        if guest.get('tourist_tax_id'):
+        if guest.get('tourist_tax_code'):
             tax_rec = self.db.table('host.tourist_tax').record(
-                pkey=guest['tourist_tax_id']
+                pkey=guest['tourist_tax_code']
             ).output('dict')
             tax_code = tax_rec.get('code', '') if tax_rec else ''
         parts.append(self._pad(tax_code, 10, 'N'))

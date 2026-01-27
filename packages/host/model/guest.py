@@ -55,7 +55,7 @@ class Table(object):
         tbl.aliasColumn('name', '@anagrafica_id.nome', name_long='!![en]Name')
         tbl.aliasColumn('full_name', '@anagrafica_id.ragione_sociale', name_long='!![en]Full Name')
         tbl.aliasColumn('gender', '@anagrafica_id.sesso', name_long='!![en]Gender')
-        tbl.aliasColumn('birth_date', '@anagrafica_id.data_nascita', name_long='!![en]Birth Date')
+        tbl.aliasColumn('birth_date', '@anagrafica_id.data_nascita', name_long='!![en]Birth Date', name_short='!![en]Birth D.')
         tbl.aliasColumn('birth_place', '@anagrafica_id.luogo_nascita', name_long='!![en]Birth Place')
         tbl.aliasColumn('birth_province', '@anagrafica_id.provincia_nascita', name_long='!![en]Birth Province')
         tbl.aliasColumn('birth_country', '@anagrafica_id.nazione_nascita', name_long='!![en]Birth Country')

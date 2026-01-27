@@ -18,4 +18,4 @@ class Menu(object):
         operations = host.branch("!![en]Operations")
         operations.thpage("!![en]Stays", table="host.stay")
         
-        root.lookupBranch('!![en]Settings', pkg='host')
+        host.lookupBranch('!![en]Settings', pkg='host')

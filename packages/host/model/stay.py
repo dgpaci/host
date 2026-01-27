@@ -56,7 +56,7 @@ class Table(object):
                          name_long='!![en]Stay Caption')
 
         #tbl.joinColumn('group_leader_id', name_long='!![en]Group Leader').relation('host.guest.id',
-        #                cnd='@group_leader_id.stay_id=$id AND @group_leader_id.@guest_type_id.is_leader IS TRUE'
+        #                cnd='@group_leader_id.stay_id=$id AND @group_leader_id.@guest_type_code.is_leader IS TRUE'
         #                ) #DP It doesn't work like this
         tbl.formulaColumn('group_leader_id', select=dict(table='host.guest',
                                                          where='$stay_id=#THIS.id AND $is_group_leader IS TRUE',
