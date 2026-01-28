@@ -29,10 +29,11 @@ class View(BaseComponent):
         return [dict(code=muni, caption=muni, condition=f"$municipality = '{muni}'") for muni in municipalities
                 if municipalities]
         
+        
 class Form(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
-        top = bc.borderContainer(region='top', datapath='.record', height='120px')
+        top = bc.borderContainer(region='top', datapath='.record', height='110px')
         fb = top.contentPane(region='center').formlet(cols=2, border_spacing='4px')
         fb.field('name', colspan=2)
         fb.field('facility_type_code', hasDownArrow=True)

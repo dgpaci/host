@@ -19,37 +19,34 @@ class View(BaseComponent):
 
 class Form(BaseComponent):
     def th_form(self, form):
-        bc = form.center.borderContainer(datapath='.record')
-        self.taxInformations(bc.contentPane(region='top', height='60px'))
+        bc = form.center.borderContainer()
+        self.taxInformations(bc.contentPane(region='top', height='60px', datapath='.record'))
         self.taxAmounts(bc.contentPane(region='center', margin='2px'))
-    
+
     def taxInformations(self, pane):
         fb = pane.formlet(cols=3)
         fb.field('code')
         fb.field('description', colspan=2)
-        
-    def taxAmounts(self, pane):
-        pane.bagGrid(
-            title='!![en]Amounts per Municipality',
-            storepath='.amounts',
-            struct=self._bagGridStruct,
-            addrow=True,
-            delrow=True,
-            height='100%'
-        )
 
-    def _bagGridStruct(self, struct):
-        """Define baggrid structure for amounts per municipality"""
-        r = struct.view().rows()
-        r.cell('comune_id', name='!![en]Municipality', width='30em',
-              dtype='L', size='22',
-              table='glbl.comune',
-              edit=True,
-              validate_notnull=True)
-        r.cell('amount', name='!![en]Amount (EUR)', width='15em',
-              dtype='N', format='#,###.00',
-              edit=True,
-              validate_notnull=True)
+    def taxAmounts(self, pane):
+        pane.inlineTableHandler(
+            relation='@municipalities',
+            viewResource='ViewMunicipalities',
+            addrow=False,
+            delrow=False,
+            pbl_classes=True
+        )
 
     def th_options(self):
         return dict(dialog_height='500px', dialog_width='700px')
+
+
+class ViewMunicipalities(BaseComponent):
+    def th_struct(self, struct):
+        r = struct.view().rows()
+        r.fieldcell('municipality_caption', width='30em', name='!![en]Municipality')
+        r.fieldcell('amount', width='15em', edit=True)
+        return struct
+
+    def th_order(self):
+        return 'municipality_caption'

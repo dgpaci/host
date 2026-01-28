@@ -19,8 +19,6 @@ class Table(object):
 
         tbl.column('code', size=':15', name_long='!![en]Code')
         tbl.column('description', size=':200', name_long='!![en]Description', validate_notnull=True)
-        tbl.column('amounts', dtype='X', name_long='!![en]Amounts per Municipality',
-                   name_short='!![en]Amounts')
 
     @metadata(mandatory=True)
     def sysRecord_MINOR_EX(self):

@@ -90,7 +90,7 @@ class Table(object):
         """
         Calculate total tax amount based on:
         - Number of nights from stay
-        - Tax rate from tourist_tax (per municipality)
+        - Tax rate from tourist_tax_municipality
         """
         stay_id = record.get('stay_id')
         tourist_tax_code = record.get('tourist_tax_code')
@@ -112,38 +112,56 @@ class Table(object):
             record['tax_amount'] = 0
             return
 
-        # Get facility comune
+        # Get facility and anagrafica
         facility = self.db.table('host.facility').record(pkey=facility_id).output('dict')
         if not facility:
             record['tax_amount'] = 0
             return
 
-        comune_id = facility.get('comune_id')
-        if not comune_id:
+        anagrafica_id = facility.get('anagrafica_id')
+        if not anagrafica_id:
             record['tax_amount'] = 0
             return
 
-        # Get tax record with amounts bag
-        tax = self.db.table('host.tourist_tax').record(pkey=tourist_tax_code).output('bag')
-        if not tax:
+        anagrafica = self.db.table('er_core.anagrafica').record(pkey=anagrafica_id).output('dict')
+        if not anagrafica:
             record['tax_amount'] = 0
             return
 
-        # Get amounts bag
-        amounts_bag = tax.getItem('amounts')
-        if not amounts_bag:
+        # Check preference for comune management
+        use_comuni = self.db.application.getPreference('dati_glbl.comuni_istat', pkg='er_core')
+
+        comune_id = None
+        localita = None
+
+        if use_comuni:
+            comune_id = anagrafica.get('comune_id')
+        else:
+            localita = anagrafica.get('localita')
+
+        if not comune_id and not localita:
             record['tax_amount'] = 0
             return
 
-        # Find the rate for this comune
-        tax_rate = None
-        for node_key in amounts_bag.keys():
-            node = amounts_bag.getItem(node_key)
-            if node and node.getItem('comune_id') == comune_id:
-                tax_rate = node.getItem('amount', 0)
-                break
+        # Build municipality key
+        if comune_id:
+            municipality_key = f"{tourist_tax_code}_{comune_id}"
+        else:
+            municipality_key = f"{tourist_tax_code}_{localita.upper()}"
 
-        if tax_rate is None or tax_rate == 0:
+        # Get tax rate from tourist_tax_municipality
+        tax_municipality = self.db.table('host.tourist_tax_municipality').query(
+            where='$municipality_key=:key',
+            key=municipality_key
+        ).fetchone()
+
+        if not tax_municipality:
+            record['tax_amount'] = 0
+            return
+
+        tax_rate = tax_municipality.get('amount', 0)
+
+        if not tax_rate:
             record['tax_amount'] = 0
             return
 
