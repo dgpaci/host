@@ -27,9 +27,9 @@ class Table(object):
 
         tbl.aliasColumn('comune_id', '@anagrafica_id.comune_id', name_long='!![en]Municipality').relation(
                     'glbl.comune.id', mode='foreignkey')
-
-        # Alias columns from anagrafica
+        
         tbl.aliasColumn('facility_type_description', '@facility_type_code.description',
                        name_long='!![en]Type Description')
         tbl.aliasColumn('comune_denominazione', '@comune_id.denominazione', name_long='!![en]Municipality Name')
-        tbl.aliasColumn('comune_sigla_provincia', '@comune_id.sigla_provincia', name_long='!![en]Province')
+        tbl.formulaColumn('municipality', 'COALESCE($comune_denominazione,@anagrafica_id.localita)',
+                            name_long='!![en]Municipality')

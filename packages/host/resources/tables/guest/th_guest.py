@@ -116,7 +116,7 @@ class FormFromStay(BaseComponent):
         fl.field('document_expiry_date')
 
     def th_options(self):
-        return dict(dialog_height='400px', dialog_width='700px')
+        return dict(dialog_height='420px', dialog_width='700px')
     
 
 class FormCheckIn(FormFromStay):

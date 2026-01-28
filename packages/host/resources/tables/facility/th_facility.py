@@ -17,7 +17,18 @@ class View(BaseComponent):
 
     def th_query(self):
         return dict(column='name', op='contains', val='')
+    
+    def th_top_custom(self, top):
+        top.slotToolbar('5,sections@municipalities,*', childname='upper', _position='<bar')
 
+    def th_sections_municipalities(self):
+        municipalities = [x['municipality'] for x in self.db.table('host.facility').query(
+                                                            where='$municipality IS NOT NULL', 
+                                                            columns='$municipality', distinct=True,
+                                                            addPkey=False).fetch()]
+        return [dict(code=muni, caption=muni, condition=f"$municipality = '{muni}'") for muni in municipalities
+                if municipalities]
+        
 class Form(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
@@ -28,8 +39,9 @@ class Form(BaseComponent):
         fb.field('max_beds')
 
         top.contentPane(region='right', width='400px').linkerBox('anagrafica_id',
-                                                                 formResource='Form',
-                                                                 dialog_windowRatio=.8)
+                                                                 formResource='FormFacility',
+                                                                 dialog_width='700px',
+                                                                 dialog_height='450px')
 
         # Bottom section for related stays
         center = bc.tabContainer(region='center', margin='2px')

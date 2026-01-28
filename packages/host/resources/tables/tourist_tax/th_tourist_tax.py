@@ -19,22 +19,23 @@ class View(BaseComponent):
 
 class Form(BaseComponent):
     def th_form(self, form):
-        bc = form.center.borderContainer()
-
-        # Top section - basic info
-        top = bc.contentPane(region='top', height='80px', datapath='.record')
-        fb = top.formbuilder(cols=2, border_spacing='4px')
-        fb.field('code', width='15em')
-        fb.field('description', width='50em', colspan=2)
-
-        # Center section - amounts per municipality (baggrid)
-        center = bc.contentPane(region='center', margin='2px')
-        center.div('!![en]Amounts per Municipality', font_weight='bold', margin_bottom='5px')
-        center.bagGrid(
-            storepath='.record.amounts',
+        bc = form.center.borderContainer(datapath='.record')
+        self.taxInformations(bc.contentPane(region='top', height='60px'))
+        self.taxAmounts(bc.contentPane(region='center', margin='2px'))
+    
+    def taxInformations(self, pane):
+        fb = pane.formlet(cols=3)
+        fb.field('code')
+        fb.field('description', colspan=2)
+        
+    def taxAmounts(self, pane):
+        pane.bagGrid(
+            title='!![en]Amounts per Municipality',
+            storepath='.amounts',
             struct=self._bagGridStruct,
             addrow=True,
-            delrow=True
+            delrow=True,
+            height='100%'
         )
 
     def _bagGridStruct(self, struct):
@@ -42,10 +43,12 @@ class Form(BaseComponent):
         r = struct.view().rows()
         r.cell('comune_id', name='!![en]Municipality', width='30em',
               dtype='L', size='22',
-              dbtable='glbl.comune',
+              table='glbl.comune',
+              edit=True,
               validate_notnull=True)
         r.cell('amount', name='!![en]Amount (EUR)', width='15em',
               dtype='N', format='#,###.00',
+              edit=True,
               validate_notnull=True)
 
     def th_options(self):
