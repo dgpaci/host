@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<GenRoBag><content>&lt;div&gt;
+	&lt;table border="0" width="95%"&gt;
+		&lt;tbody&gt;
+			&lt;tr&gt;
+				&lt;td&gt;
+					&lt;div style="font-style:italic;"&gt;
+						&lt;strong&gt;$ragione_sociale&lt;/strong&gt;&lt;/div&gt;
+					&lt;div style="font-style:italic;"&gt;
+						$indirizzo_esteso&lt;/div&gt;
+					&lt;div style="font-style:italic;"&gt;
+						$email&lt;/div&gt;
+				&lt;/td&gt;
+			&lt;/tr&gt;
+		&lt;/tbody&gt;
+	&lt;/table&gt;
+&lt;/div&gt;
+&lt;div&gt;
+	&amp;nbsp;&lt;/div&gt;
+</content>
+<metadata><email><subject _T="NN"></subject>
+<to_address _T="NN"></to_address>
+<from_address _T="NN"></from_address>
+<cc_address _T="NN"></cc_address>
+<bcc_address _T="NN"></bcc_address>
+<attachments _T="NN"></attachments></email>
+<email_compiled _T="BAG"></email_compiled>
+<default_letterhead _T="NN"></default_letterhead></metadata>
+<content_css _T="NN"></content_css>
+<varsbag _T="BAG"></varsbag>
+<parametersbag _T="NN"></parametersbag>
+<email><attached_reports _T="BAG"></attached_reports></email>
+<compiled><main maintable="er_core.anagrafica" locale="it-IT" virtual_columns="" columns="" formats="{}::JS" masks="{}::JS" editcols="{}::JS" df_templates="{}::JS" dtypes="{}::JS">&lt;div&gt;
+	&lt;table border="0" width="95%"&gt;
+		&lt;tbody&gt;
+			&lt;tr&gt;
+				&lt;td&gt;
+					&lt;div style="font-style:italic;"&gt;
+						&lt;strong&gt;$ragione_sociale&lt;/strong&gt;&lt;/div&gt;
+					&lt;div style="font-style:italic;"&gt;
+						$indirizzo_esteso&lt;/div&gt;
+					&lt;div style="font-style:italic;"&gt;
+						$email&lt;/div&gt;
+				&lt;/td&gt;
+			&lt;/tr&gt;
+		&lt;/tbody&gt;
+	&lt;/table&gt;
+&lt;/div&gt;
+&lt;div&gt;
+	&amp;nbsp;&lt;/div&gt;
+</main></compiled></GenRoBag>
