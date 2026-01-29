@@ -4,7 +4,8 @@ class Table(object):
     
     def trigger_onInserted(self, record=None, **kwargs):
         """Create tourist_tax_municipality records for this facility's municipality"""
-        self._ensure_municipality_tax_records(record)
+        if record['comune_id'] or record['localita']:
+            self._ensure_municipality_tax_records(record)
 
     def trigger_onUpdated(self, record=None, old_record=None, **kwargs):
         if self.fieldsChanged('comune_id,localita', record, old_record):

@@ -3,7 +3,7 @@
 <en_master_data base="Master Data" it="Dati principali"></en_master_data>
 <en_facilities base="Facilities" it="Strutture"></en_facilities>
 <en_guests base="Guests" it="Ospiti"></en_guests>
-<en_tourist_tax_rates base="Tourist Tax Rates" it="Aliquote della tassa turistica"></en_tourist_tax_rates>
+<en_tourist_tax_rates base="Tourist Tax Rates" it="Imposte di soggiorno"></en_tourist_tax_rates>
 <en_operations base="Operations" it="Operazioni"></en_operations>
 <en_stays base="Stays" it="Soggiorni"></en_stays>
 <en_settings base="Settings" it="Impostazioni"></en_settings></menu>
@@ -20,18 +20,17 @@
 <en_facility_type base="Facility Type" it="Tipo di struttura"></en_facility_type>
 <en_municipality base="Municipality" it="Municipalità"></en_municipality>
 <en_type_description base="Type Description" it="Descrizione del tipo"></en_type_description>
-<en_municipality_name base="Municipality Name" it="Nome del comune"></en_municipality_name>
-<en_province base="Province" it="Provincia"></en_province></facility>
+<en_municipality_name base="Municipality Name" it="Nome del comune"></en_municipality_name></facility>
 <facility_type path="model/facility_type.py" ext="py"><en_facility_type base="Facility Type" it="Tipo di struttura"></en_facility_type>
 <en_facility_types base="Facility Types" it="Tipi di strutture"></en_facility_types>
 <en_code base="Code" en="Code" it="Codice"></en_code>
 <en_description base="Description" en="Description" it="Descrizione"></en_description></facility_type>
 <guest path="model/guest.py" ext="py"><en_guest base="Guest" it="Ospite"></en_guest>
 <en_guests base="Guests" it="Ospiti"></en_guests>
-<en_stay base="Stay" it="Rimanere"></en_stay>
+<en_stay base="Stay" it="Soggiorno"></en_stay>
 <en_guest_registry base="Guest Registry" it="Registro degli ospiti"></en_guest_registry>
 <en_guest_type base="Guest Type" it="Tipo di ospite"></en_guest_type>
-<en_tourist_tax_rate base="Tourist Tax Rate" it="Aliquota della tassa turistica"></en_tourist_tax_rate>
+<en_tourist_tax_rate base="Tourist Tax Rate" it="Imposta di soggiorno"></en_tourist_tax_rate>
 <en_document_type base="Document Type" it="Tipo di documento"></en_document_type>
 <en_document_number base="Document Number" it="Numero del documento"></en_document_number>
 <en_document_issued_by base="Document Issued By" it="Documento rilasciato da"></en_document_issued_by>
@@ -67,7 +66,7 @@
 <en_code base="Code" en="Code" it="Codice"></en_code>
 <en_description base="Description" en="Description" it="Descrizione"></en_description>
 <en_is_group_leader base="Is Group Leader" it="È capogruppo"></en_is_group_leader></guest_type>
-<stay path="model/stay.py" ext="py"><en_stay base="Stay" it="Rimanere"></en_stay>
+<stay path="model/stay.py" ext="py"><en_stay base="Stay" it="Soggiorno"></en_stay>
 <en_stays base="Stays" it="Soggiorni"></en_stays>
 <en_facility base="Facility" it="Struttura"></en_facility>
 <en_check_in_date base="Check-in Date" it="Data check-in"></en_check_in_date>
@@ -94,12 +93,23 @@
 <en_stay_caption base="Stay Caption" it="Didascalia del soggiorno"></en_stay_caption>
 <en_group_leader base="Group Leader" it="Leader del gruppo"></en_group_leader>
 <en_group_leader_name base="Group Leader Name" it="Nome del capogruppo"></en_group_leader_name></stay>
-<tourist_tax path="model/tourist_tax.py" ext="py"><en_tourist_tax_rate base="Tourist Tax Rate" it="Aliquota della tassa turistica"></en_tourist_tax_rate>
-<en_tourist_tax_rates base="Tourist Tax Rates" it="Aliquote della tassa turistica"></en_tourist_tax_rates>
+<tourist_tax path="model/tourist_tax.py" ext="py"><en_tourist_tax_rate base="Tourist Tax Rate" it="Imposta di soggiorno"></en_tourist_tax_rate>
+<en_tourist_tax_rates base="Tourist Tax Rates" it="Imposte di soggiorno"></en_tourist_tax_rates>
 <en_code base="Code" en="Code" it="Codice"></en_code>
-<en_description base="Description" en="Description" it="Descrizione"></en_description>
-<en_amounts_per_municipality base="Amounts per Municipality" it="Importi per comune"></en_amounts_per_municipality>
-<en_amounts base="Amounts" it="Importi"></en_amounts></tourist_tax></model>
+<en_description base="Description" en="Description" it="Descrizione"></en_description></tourist_tax>
+<tourist_tax_municipality path="model/tourist_tax_municipality.py" ext="py"><en_tourist_tax_municipality base="Tourist Tax Municipality"></en_tourist_tax_municipality>
+<en_tourist_tax_municipalities base="Tourist Tax Municipalities"></en_tourist_tax_municipalities>
+<en_tourist_tax base="Tourist Tax"></en_tourist_tax>
+<en_municipality base="Municipality" it="Municipalità"></en_municipality>
+<en_locality base="Locality"></en_locality>
+<en_amount_eur_ base="Amount (EUR)" it="Importo (EUR)"></en_amount_eur_>
+<en_amount base="Amount"></en_amount>
+<en_maximum_nights base="Maximum Nights"></en_maximum_nights>
+<en_max_nights base="Max Nights"></en_max_nights>
+<en_maximum_number_of_consecutive_nights_for_which_the_tax_applies_leave_empty_for_no_limit_ base="Maximum number of consecutive nights for which the tax applies. Leave empty for no limit."></en_maximum_number_of_consecutive_nights_for_which_the_tax_applies_leave_empty_for_no_limit_>
+<en_municipality_name base="Municipality Name" it="Nome del comune"></en_municipality_name>
+<en_municipality_caption base="Municipality Caption"></en_municipality_caption>
+<en_municipality_key base="Municipality Key"></en_municipality_key></tourist_tax_municipality></model>
 <resources><tables><facility><th_facility path="resources/tables/facility/th_facility.py" ext="py"><en_type fr="Type" de="Art" en="Type" it="Tipo" base="Type"></en_type>
 <en_municipality base="Municipality" it="Municipalità"></en_municipality>
 <en_stays base="Stays" it="Soggiorni"></en_stays></th_facility></facility>
@@ -109,7 +119,6 @@
 <en_guest base="Guest" it="Ospite"></en_guest>
 <en_type fr="Type" de="Art" en="Type" it="Tipo" base="Type"></en_type>
 <en_tax base="Tax" it="Imposta"></en_tax>
-<en_birth_date base="Birth Date" it="Data di nascita"></en_birth_date>
 <en_tax_amount base="Tax Amount" it="Importo dell'imposta"></en_tax_amount>
 <en_document_information base="Document Information" it="Informazioni sul documento"></en_document_information>
 <en_personal_details base="Personal Details"></en_personal_details>
@@ -124,9 +133,18 @@
 <en_arrival base="Arrival" it="Arrivo"></en_arrival>
 <en_flight base="Flight" it="Volo"></en_flight>
 <en_group_leader base="Group Leader" it="Leader del gruppo"></en_group_leader>
+<en_future_stays base="Future Stays"></en_future_stays>
+<en_past_stays base="Past Stays"></en_past_stays>
 <en_guests base="Guests" it="Ospiti"></en_guests>
 <en_export_police_report base="Export Police Report" it="Rapporto della polizia delle esportazioni"></en_export_police_report>
-<en_export_txt_for_police base="Export TXT for Police" it="Esporta TXT per Police"></en_export_txt_for_police></th_stay></stay>
-<tourist_tax><th_tourist_tax path="resources/tables/tourist_tax/th_tourist_tax.py" ext="py"><en_amounts_per_municipality base="Amounts per Municipality" it="Importi per comune"></en_amounts_per_municipality>
-<en_municipality base="Municipality" it="Municipalità"></en_municipality>
-<en_amount_eur_ base="Amount (EUR)" it="Importo (EUR)"></en_amount_eur_></th_tourist_tax></tourist_tax></tables></resources></GenRoBag>
+<en_export_txt_for_police base="Export TXT for Police" it="Esporta TXT per Police"></en_export_txt_for_police>
+<en_adults base="Adults" it="Adulti"></en_adults>
+<en_children base="Children" de="Kinder" en="Children" fr="Enfants" it="Bambini"></en_children>
+<en_add_adult base="Add Adult"></en_add_adult>
+<en_add_child base="Add Child"></en_add_child>
+<en_guest base="Guest" it="Ospite"></en_guest>
+<en_type fr="Type" de="Art" en="Type" it="Tipo" base="Type"></en_type>
+<en_birth_date base="Birth Date" it="Data di nascita"></en_birth_date></th_stay></stay>
+<tourist_tax><th_tourist_tax path="resources/tables/tourist_tax/th_tourist_tax.py" ext="py"><en_municipality base="Municipality" it="Municipalità"></en_municipality></th_tourist_tax></tourist_tax>
+<tourist_tax_municipality><th_tourist_tax_municipality path="resources/tables/tourist_tax_municipality/th_tourist_tax_municipality.py" ext="py"><en_municipality base="Municipality" it="Municipalità"></en_municipality></th_tourist_tax_municipality></tourist_tax_municipality></tables></resources>
+<webpages><online_checkin path="webpages/online_checkin.py" ext="py"><en_invalid_check_in_link base="Invalid check-in link"></en_invalid_check_in_link></online_checkin></webpages></GenRoBag>

@@ -45,7 +45,8 @@ class ViewMunicipalities(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
         r.fieldcell('municipality_caption', width='30em', name='!![en]Municipality')
-        r.fieldcell('amount', width='15em', edit=True)
+        r.fieldcell('amount', width='10em', edit=True)
+        r.fieldcell('max_nights', width='10em', edit=True)
         return struct
 
     def th_order(self):

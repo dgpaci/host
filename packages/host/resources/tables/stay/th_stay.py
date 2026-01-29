@@ -36,7 +36,16 @@ class ViewFromFacility(View):
         r.fieldcell('check_out_date', width='10em', name='!![en]Check-out')
         r.fieldcell('nights', width='8em')
         r.fieldcell('group_leader_name', width='auto', name='!![en]Group Leader')
-        
+        r.cell('copyurl',calculated=True,name='!![en]Copy',cellClasses='cellbutton',
+                    format_buttonclass='copy iconbox', width='3em',
+                    format_isbutton=True,
+                    format_onclick="""
+            var row = this.widget.rowByIndex($1.rowIndex);
+            var external_url = row.checkin_url;
+            genro.textToClipboard(external_url,_T('Link copiato'));
+            """)
+        r.fieldcell('checkin_url', name='!![en]Link', width='2.5em',
+               template='<a href="$checkin_url" target="_blank"><img src="/_rsrc/common/css_icons/svg/16/link_connected.svg" height="13px"/></a>')
     
 class Form(BaseComponent):
     def th_form(self, form):
@@ -101,4 +110,82 @@ class FormFromFacility(BaseComponent):
                                       formResource='FormFromStay')
         
     def th_options(self):
-        return dict(dialog_height='500px', dialog_width='800px', modal=True)
+        return dict(dialog_height='500px', dialog_width='800px')
+
+
+class FormOnlineCheckin(BaseComponent):
+    """Form for online check-in webpage"""
+
+    def th_form(self, form):
+        bc = form.center.borderContainer()
+        self.stayInfo(bc.contentPane(region='top', height='100px', datapath='.record'))
+        self.guestInformations(bc.contentPane(region='center'))
+        self.guestsNavigation(bc.contentPane(region='bottom', height='50px'))
+        
+    def stayInfo(self, pane):
+        """Stay information (readonly)"""
+        fb = pane.formlet(cols=4, border_spacing='4px')
+        fb.field('facility_name', lbl='!![en]Facility', readOnly=True, colspan=4)
+        fb.field('check_in_date', readOnly=True)
+        fb.field('check_out_date', readOnly=True)
+        fb.field('adults_count', lbl='!![en]Adults', readOnly=True)
+        fb.field('children_count', lbl='!![en]Children', readOnly=True)
+        
+    def guestInformations(self, pane):
+        pane.borderTableHandler(
+            relation='@guests',
+            viewResource='ViewOnlineCheckin',
+            formResource='FormCheckIn',
+            form_showtoolbar=False,
+            addrow=False, 
+            delrow=False, 
+            configurable=False,
+            grid_autoSelect=True,
+            vpane_height='30%'
+        )
+
+    def guestsNavigation(self, pane):
+        """Custom navigation bar with add guest buttons"""
+        pane.dataRpc('dummy', 'checkGuestLimits',
+                    stay_id='^.id',
+                    _onResult="""
+                        SET .can_add_adult = result.can_add_adult;
+                        SET .can_add_child = result.can_add_child;
+                        SET .current_adults = result.current_adults;
+                        SET .current_children = result.current_children;
+                    """,
+                    _fired='^.guests_changed')
+
+        fb = pane.div(margin='10px').formbuilder(cols=4, border_spacing='15px')
+
+        fb.div("""
+            <span>!![en]Adults: <b data-bind=".current_adults">0</b> / <b data-bind=".adults_count">0</b></span>
+            <span style="margin-left: 20px">!![en]Children: <b data-bind=".current_children">0</b> / <b data-bind=".children_count">0</b></span>
+        """, colspan=2)
+
+        fb.button('!![en]Add Adult',
+                 action="""
+                     var stay_id = GET .id;
+                     genro.serverCall('addGuest', {stay_id: stay_id, is_adult: true}, function(guest_id) {
+                         if (guest_id) {
+                             SET .guests_changed = new Date();
+                             genro.wdgById('guests_handler').widget.openRecord(guest_id);
+                         }
+                     });
+                 """,
+                 disabled='^.can_add_adult?=!#v')
+
+        fb.button('!![en]Add Child',
+                 action="""
+                     var stay_id = GET .id;
+                     genro.serverCall('addGuest', {stay_id: stay_id, is_adult: false}, function(guest_id) {
+                         if (guest_id) {
+                             SET .guests_changed = new Date();
+                             genro.wdgById('guests_handler').widget.openRecord(guest_id);
+                         }
+                     });
+                 """,
+                 disabled='^.can_add_child?=!#v')
+
+    def th_options(self):
+        return dict(dialog_height='600px', dialog_width='900px')

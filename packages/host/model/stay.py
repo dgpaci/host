@@ -23,7 +23,7 @@ class Table(object):
                    name_short='!![en]Check-in')
 
         tbl.column('check_out_date', dtype='D', name_long='!![en]Check-out Date', validate_notnull=True,
-                   name_short='!![en]Check-out', validate_min='$check_in_date')
+                   name_short='!![en]Check-out')
 
         tbl.column('arrival_time', dtype='H', name_long='!![en]Arrival Time',
                    name_short='!![en]Arrival')
@@ -45,7 +45,6 @@ class Table(object):
         tbl.formulaColumn('total_guests', "COALESCE($adults_count, 0) + COALESCE($children_count, 0)",
                          dtype='I', name_long='!![en]Total Guests', name_short='!![en]Guests')
 
-        # Alias columns
         tbl.aliasColumn('max_beds', '@facility_id.max_beds', name_long='!![en]Max Beds')
         tbl.aliasColumn('facility_name', '@facility_id.name', name_long='!![en]Facility Name')
         tbl.aliasColumn('facility_type', '@facility_id.@facility_type_code.description',
@@ -64,3 +63,13 @@ class Table(object):
                           ).relation('host.guest.id', one_one='*')
         tbl.aliasColumn('group_leader_name', '@group_leader_id.full_name',
                        name_long='!![en]Group Leader Name')
+        tbl.pyColumn('checkin_url', required_columns='$id')
+        tbl.pyColumn('checkin_url_qrcode', required_columns='$id')
+
+    def pyColumn_checkin_url(self,record,field):
+        return self.db.application.site.externalUrl('/host/online_checkin',stay_id=record['id'])
+    
+    def pyColumn_checkin_url_qrcode(self,record,field):
+        extUrl = self.db.application.site.externalUrl('/host/online_checkin',stay_id=record['id'])
+        extQrcode = self.db.application.site.externalUrl(f'/_tools/qrcode?text={extUrl}')
+        return f'<img class="img_qrcode" src="{extQrcode}"/>'

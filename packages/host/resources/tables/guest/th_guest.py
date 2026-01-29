@@ -16,7 +16,7 @@ class View(BaseComponent):
         return struct
 
     def th_order(self):
-        return 'stay_check_in DESC, guest_type_code'
+        return 'stay_check_in DESC,guest_type_code'
 
     def th_query(self):
         return dict(column='surname', op='contains', val='')
@@ -27,13 +27,25 @@ class ViewFromStay(BaseComponent):
         r = struct.view().rows()
         r.fieldcell('full_name', width='20em', name='!![en]Guest')
         r.fieldcell('guest_type_description', width='10em', name='!![en]Type')
-        r.fieldcell('birth_date', width='6em', name='!![en]Birth Date')
+        r.fieldcell('birth_date', width='6em')
         r.fieldcell('tax_amount', width='10em', name='!![en]Tax Amount', dtype='N', totalize=True)
         return struct
 
     def th_order(self):
-        return 'guest_type_code, surname'
-    
+        return 'guest_type_code,surname'
+
+
+class ViewOnlineCheckin(BaseComponent):
+    def th_struct(self, struct):
+        r = struct.view().rows()
+        r.fieldcell('full_name', width='20em', name='!![en]Guest')
+        r.fieldcell('guest_type_description', width='10em', name='!![en]Type')
+        r.fieldcell('birth_date', width='6em')
+        return struct
+
+    def th_order(self):
+        return 'guest_type_code,surname'
+        
     
 class Form(BaseComponent):
     def th_form(self, form):
@@ -83,12 +95,12 @@ class FormFromStay(BaseComponent):
         fl.field('sesso', validate_notnull=True, tag='filteringSelect', values='[!![en]M],[!![en]F]')
         fl.field('data_nascita')
         fl.field('luogo_nascita')
-        fl.field('nazione_nascita')
+        fl.field('nazione_nascita', selected_code='.cittadinanza')
         fl.field('cittadinanza')
         fl.field('nazione', lbl='!![en]Country of Residence', validate_notnull=True)
         fl.field('provincia', hidden='^.nazione?=#v!="IT"',
                                 lbl='!![en]Province of Residence',
-                                validate_notnull='^.@guest_type_code.is_leader')
+                                validate_notnull='^.nazione?=#v=="IT"')
                  
     def tourismTaxDefinition(self, pane):
         fl = pane.formlet(cols=3)
@@ -97,10 +109,12 @@ class FormFromStay(BaseComponent):
         fl.field('guest_type_code', hasDownArrow=True)
         fl.field('tourist_tax_code', hasDownArrow=True)
         fl.field('tax_amount', readOnly=True)
-        pane.dataRpc('tax_amount', self.calculateTourismTax, tourist_tax_code='^.tourist_tax_code')
+        pane.dataRpc('tax_amount', self.calculateTourismTax, 
+                                tourist_tax_code='^.tourist_tax_code', 
+                                stay_id='=.stay_id')
         
     @public_method
-    def calculateTourismTax(self, tourist_tax_code):
+    def calculateTourismTax(self, stay_id=None, tourist_tax_code=None, **kwargs):
         # TODO: Placeholder for actual tax calculation logic
         # For now, just return 0
         return 0
@@ -117,30 +131,34 @@ class FormFromStay(BaseComponent):
 
     def th_options(self):
         return dict(dialog_height='420px', dialog_width='700px')
-    
+        
 
 class FormCheckIn(FormFromStay):
-    
+
     def th_form(self, form):
         bc = form.center.borderContainer(datapath='.record')
         self.guestPersonalDetails(bc.contentPane(region='top', datapath='.@anagrafica_id'))
         self.documentInformations(bc.contentPane(region='center'))
-    
+
     def guestPersonalDetails(self, pane):
         fl = pane.formlet(cols=4, table='er_core.anagrafica', fld_validate_notnull=True)
         fl.div('!![en]Personal Details', colspan=4, font_weight='bold',
                         margin_top='10px', margin_bottom='5px')
         fl.field('nome', colspan=2)
         fl.field('cognome', colspan=2)
-        fl.field('sesso', tag='filteringSelect', values='[!![en]M],[!![en]F]')
+        fl.field('sesso', tag='filteringSelect', values='[M:!![en]Male],[F:!![en]Female]')
         fl.field('data_nascita')
         fl.field('luogo_nascita')
-        fl.field('nazione_nascita')
+        fl.field('nazione_nascita', selected_code='.cittadinanza')
         fl.field('cittadinanza')
         fl.field('nazione', lbl='!![en]Country of Residence')
         fl.field('provincia', hidden='^.nazione?=#v!="IT"',
                                 lbl='!![en]Province of Residence',
-                                validate_notnull='^.@guest_type_code.is_leader')
-        
+                                validate_notnull='^.nazione?=#v=="IT"')
+        fl.dbSelect('^#FORM.record.guest_type_code', table='host.guest_type',
+                hasDownArrow=True, lbl='!![en]Guest Type',
+                readOnly='^#FORM.record.is_group_leader',
+                validate_notnull=True)
+
     def th_options(self):
-        return dict(dialog_height='300px', dialog_width='700px')
+        return dict(dialog_height='400px', dialog_width='700px')

@@ -28,6 +28,10 @@ class Table(object):
         tbl.column('amount', dtype='N', size='12,2', name_long='!![en]Amount (EUR)',
                    name_short='!![en]Amount', default=0, validate_notnull=True)
 
+        tbl.column('max_nights', dtype='I', name_long='!![en]Maximum Nights',
+                   name_short='!![en]Max Nights',
+                   tip='!![en]Maximum number of consecutive nights for which the tax applies. Leave empty for no limit.')
+
         # Alias columns
         tbl.aliasColumn('comune_denominazione', '@comune_id.denominazione',
                        name_long='!![en]Municipality Name')

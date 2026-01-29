@@ -64,8 +64,8 @@ class Table(object):
         guest = tbl.colgroup('guest', name_long='!![en]Guest Information')
         guest.aliasColumn('guest_type_description', '@guest_type_code.description',
                        name_long='!![en]Guest Type')
-        guest.aliasColumn('is_group_leader', '@guest_type_code.is_leader', static=True,
-                       name_long='!![en]Is Group Leader')
+        guest.aliasColumn('is_group_leader', '@guest_type_code.is_leader', 
+                       name_long='!![en]Is Group Leader', static=True)
         guest.aliasColumn('document_type_description', '@document_type_code.description',
                        name_long='!![en]Doc Type Description')
         tbl.aliasColumn('tax_description', '@tourist_tax_code.description', name_long='!![en]Tax Description')
@@ -165,5 +165,12 @@ class Table(object):
             record['tax_amount'] = 0
             return
 
+        # Apply max_nights limit if set
+        max_nights = tax_municipality.get('max_nights')
+        if max_nights and max_nights > 0:
+            taxable_nights = min(nights, max_nights)
+        else:
+            taxable_nights = nights
+
         # Calculate total
-        record['tax_amount'] = nights * tax_rate
+        record['tax_amount'] = taxable_nights * tax_rate
