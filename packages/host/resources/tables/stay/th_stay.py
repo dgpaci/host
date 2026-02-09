@@ -96,8 +96,7 @@ class FormFromFacility(BaseComponent):
         bc = form.center.borderContainer()
         self.stayInformations(bc.contentPane(region='top', height='100px', datapath='.record'))
         
-        center = bc.tabContainer(region='center', margin='2px')
-        self.guestsTab(center.contentPane(title='!![en]Guests'))
+        self.guestsTab(bc.contentPane(region='center'))
 
     def stayInformations(self, pane):
         fb = pane.formlet(cols=4, border_spacing='4px')
@@ -152,7 +151,7 @@ class FormOnlineCheckin(BaseComponent):
         pane.dataController("""if(current_guest_id){
                                 frm.goToRecord(current_guest_id);
                                 }else{
-                                    SET #guestsForm.current_guest_id = group_leader_id;
+                                    frm.goToRecord(group_leader_id);
                                 }""",
                           current_guest_id='^#guestsForm.current_guest_id',
                           group_leader_id='^#FORM.record.group_leader_id', 

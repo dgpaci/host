@@ -68,14 +68,16 @@ class Table(object):
         tbl.formulaColumn('current_adults', "COALESCE(#curr_adults, 0)",
                          select_curr_adults=dict(table='host.guest',
                                    where="""$stay_id=#THIS.id AND
-                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) >= 18""",
+                                           @anagrafica_id.data_nascita IS NOT NULL AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) >= 12""",
                                    columns='COUNT(*)'),
                          dtype='I', name_long='!![en]Current Adults')
 
         tbl.formulaColumn('current_children', "COALESCE(#curr_children, 0)",
                           select_curr_children=dict(table='host.guest',
                                    where="""$stay_id=#THIS.id AND
-                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) < 18""",
+                                           @anagrafica_id.data_nascita IS NOT NULL AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) < 12""",
                                    columns='COUNT(*)'),
                           dtype='I', name_long='!![en]Current Children')
 

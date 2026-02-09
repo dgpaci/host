@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from gnr.core.gnrbag import Bag
+from gnr.core.gnrbag import Bag
+from datetime import date
+
 class Table(object):
     """Guest table - each guest belongs to one stay"""
 
@@ -67,6 +71,7 @@ class Table(object):
         tbl.aliasColumn('birth_province', '@anagrafica_id.provincia_nascita', name_long='!![en]Birth Province')
         tbl.aliasColumn('birth_country', '@anagrafica_id.nazione_nascita', name_long='!![en]Birth Country')
         tbl.aliasColumn('citizenship', '@anagrafica_id.cittadinanza', name_long='!![en]Citizenship')
+        tbl.aliasColumn('age', '@anagrafica_id.eta', name_long='!![en]Age')
 
         guest = tbl.colgroup('guest', name_long='!![en]Guest Information')
         guest.aliasColumn('guest_type_description', '@guest_type_code.description',
@@ -86,14 +91,73 @@ class Table(object):
         tbl.aliasColumn('facility_comune_id', '@stay_id.@facility_id.comune_id', name_long='!![en]Facility Municipality ID')
 
     def trigger_onInserting(self, record=None, **kwargs):
-        """Calculate tax amount on insert"""
-        self._calculate_tax_amount(record)
+        if not record.get('tourist_tax_code'):
+            record['tourist_tax_code'] = self._guess_tourist_tax_code(record)
+        self.calculateTaxAmount(record)
 
     def trigger_onUpdating(self, record=None, old_record=None, **kwargs):
-        """Recalculate tax amount on update"""
-        self._calculate_tax_amount(record)
+        if self.fieldsChanged('tourist_tax_code', record, old_record):
+            pass  # user forced the tax code; keep it
+        else:
+            guessed_code = self._guess_tourist_tax_code(record)
+            guessed_old = self._guess_tourist_tax_code(old_record)
+            current_code = record.get('tourist_tax_code')
+            if current_code and current_code != guessed_old:
+                pass  # keep the previously forced value
+            else:
+                record['tourist_tax_code'] = guessed_code
+        self.calculateTaxAmount(record)
+        self.notifyDbUpdate(record['id'])
 
-    def _evaluate_exemption_conditions(self, exemption_conditions=None, guest_id=None):
+    def _guess_tourist_tax_code(self, record):
+        stay_id = record.get('stay_id')
+        anagrafica_id = record.get('anagrafica_id')
+
+        if not (stay_id and anagrafica_id):
+            return self.db.application.getPreference('tourist_tax_default_code', pkg='host') or '0000000005'
+
+        stay = self.db.table('host.stay').record(pkey=stay_id).output('dict')
+        facility_id = stay.get('facility_id') if stay else None
+        check_in_date = stay.get('check_in_date') if stay else None
+
+        if not facility_id:
+            return self.db.application.getPreference('tourist_tax_default_code', pkg='host') or '0000000005'
+
+        comune_id, localita = self.db.table('host.facility').readColumns(
+            pkey=facility_id,
+            columns='@anagrafica_id.comune_id,@anagrafica_id.localita'
+        )
+
+        if not (comune_id or localita):
+            return self.db.application.getPreference('tourist_tax_default_code', pkg='host') or '0000000005'
+
+        if comune_id:
+            municipality_pattern = f"%_{comune_id}"
+        else:
+            municipality_pattern = f"%_{localita.upper()}"
+
+        tax_municipalities = self.db.table('host.tourist_tax_municipality').query(
+            where='$municipality_key LIKE :pattern',
+            pattern=municipality_pattern
+        ).fetch()
+
+        fallback_code = None
+        for tax_mun in tax_municipalities:
+            exemption_conditions = tax_mun.get('exemption_conditions')
+            if not exemption_conditions:
+                if not fallback_code:
+                    fallback_code = tax_mun.get('tourist_tax_code')
+                continue
+            is_exempt = self._evaluate_exemption_conditions(
+                exemption_conditions=exemption_conditions,
+                record=record
+            )
+            if is_exempt:
+                return tax_mun.get('tourist_tax_code')
+
+        return fallback_code or self.db.application.getPreference('tourist_tax_default_code', pkg='host') or '0000000005'
+
+    def _evaluate_exemption_conditions(self, exemption_conditions=None, record=None, guest_id=None, **kwargs):
         """
         Evaluate exemption conditions from bag against guest data.
         Returns True if all conditions are met (guest is exempt).
@@ -105,53 +169,47 @@ class Table(object):
         - operator: comparison operator ('<', '>', '==', '!=', '<=', '>=')
         - value: comparison value (fixed value or column reference with $)
         """
-        if not exemption_conditions or not guest_id:
+        if not exemption_conditions:
             return False
 
-        from gnr.core.gnrbag import Bag
-
         conditions = exemption_conditions.values() if isinstance(exemption_conditions, Bag) else exemption_conditions
+        record = record or {}
+        guest_id = guest_id or record.get('id')
 
         for condition in conditions:
-            if not isinstance(condition, dict):
+            parsed = self._parse_exemption_condition(condition)
+            if not parsed:
                 continue
 
-            column = condition.get('column')
-            operator = condition.get('operator')
-            compare_value = condition.get('value')
+            left_expr = parsed['left']
+            operator = parsed['operator']
+            right_expr = parsed['right']
 
-            if not column or not operator:
-                continue
+            left_value = self._resolve_condition_value(left_expr, record=record, guest_id=guest_id)
+            right_value = self._resolve_condition_value(right_expr, record=record, guest_id=guest_id, literal_ok=True)
 
-            # Read the column value from the guest table
-            column_value = self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=f'${column}')
-
-            if column_value is None:
+            if left_value is None:
                 return False
 
-            # If compare_value starts with $, read it from the guest table too
-            if isinstance(compare_value, str) and compare_value.startswith('$'):
-                compare_value = self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=f'{compare_value}')
-
-            # Perform comparison
             try:
+                left_value, right_value = self._coerce_for_compare(left_value, right_value, operator)
                 if operator == '<':
-                    if not (column_value < compare_value):
+                    if not (left_value < right_value):
                         return False
                 elif operator == '>':
-                    if not (column_value > compare_value):
+                    if not (left_value > right_value):
                         return False
                 elif operator == '<=':
-                    if not (column_value <= compare_value):
+                    if not (left_value <= right_value):
                         return False
                 elif operator == '>=':
-                    if not (column_value >= compare_value):
+                    if not (left_value >= right_value):
                         return False
                 elif operator == '==':
-                    if not (column_value == compare_value):
+                    if not (left_value == right_value):
                         return False
                 elif operator == '!=':
-                    if not (column_value != compare_value):
+                    if not (left_value != right_value):
                         return False
                 else:
                     return False
@@ -160,79 +218,138 @@ class Table(object):
 
         return True
 
-    def _calculate_tax_amount(self, record):
-        """
-        Calculate total tax amount based on:
-        - Number of nights from stay
-        - Tax rate from tourist_tax_municipality
-        - Exemption conditions evaluation
-        """
-        stay_id = record.get('stay_id')
-        tourist_tax_code = record.get('tourist_tax_code')
+    def _parse_exemption_condition(self, condition):
+        if isinstance(condition, dict):
+            column = condition.get('column')
+            operator = condition.get('operator')
+            value = condition.get('value')
+            if not column or not operator:
+                return None
+            left = column if column.startswith(('$', '@')) else f'${column}'
+            return dict(left=left, operator=operator, right=value)
+
+        if hasattr(condition, 'get'):
+            column = condition.get('column')
+            operator = condition.get('operator')
+            value = condition.get('value')
+            if not column or not operator:
+                return None
+            left = column if column.startswith(('$', '@')) else f'${column}'
+            return dict(left=left, operator=operator, right=value)
+
+        if isinstance(condition, str):
+            raw = condition.strip()
+            for op in ('<=', '>=', '==', '!=', '<', '>'):
+                if op in raw:
+                    left, right = [p.strip() for p in raw.split(op, 1)]
+                    left = left if left.startswith(('$', '@')) else f'${left}'
+                    return dict(left=left, operator=op, right=right)
+        return None
+
+    def _resolve_condition_value(self, expr, record=None, guest_id=None, literal_ok=False):
+        if expr is None:
+            return None
+        if not isinstance(expr, str):
+            return expr
+
+        raw = expr.strip()
+        if not raw:
+            return None
+
+        if not raw.startswith(('$', '@')):
+            return self._coerce_literal(raw) if literal_ok else raw
+
+        if guest_id:
+            if raw.startswith('$'):
+                return self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=f'${raw[1:]}')
+            return self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=raw)
+
+        record = record or {}
+
+        if raw.startswith('$'):
+            column = raw[1:]
+            if column in record:
+                return record.get(column)
+            return None
+
+        if raw.startswith('@stay_id.'):
+            stay_id = record.get('stay_id')
+            if stay_id:
+                tail = raw[len('@stay_id.'):]
+                if tail and tail[0] not in '@$':
+                    tail = f'${tail}'
+                return self.db.table('host.stay').readColumns(pkey=stay_id, columns=tail)
+            return None
+
+        if raw.startswith('@anagrafica_id.'):
+            anagrafica_id = record.get('anagrafica_id')
+            if anagrafica_id:
+                tail = raw[len('@anagrafica_id.'):]
+                if tail and tail[0] not in '@$':
+                    tail = f'${tail}'
+                return self.db.table('er_core.anagrafica').readColumns(pkey=anagrafica_id, columns=tail)
+            return None
+
+        return None
+
+    def _coerce_literal(self, value):
+        if not isinstance(value, str):
+            return value
+        v = value.strip()
+        if not v:
+            return v
+        low = v.lower()
+        if low in ('true', 'false'):
+            return low == 'true'
+        try:
+            if v.isdigit() or (v.startswith('-') and v[1:].isdigit()):
+                return int(v)
+            return float(v)
+        except ValueError:
+            pass
+        try:
+            return date.fromisoformat(v)
+        except ValueError:
+            return v
+
+    def _coerce_for_compare(self, left_value, right_value, operator):
+        if operator in ('<', '>', '<=', '>='):
+            if isinstance(left_value, str):
+                left_value = self._coerce_literal(left_value)
+            if isinstance(right_value, str):
+                right_value = self._coerce_literal(right_value)
+        return left_value, right_value
+
+    def calculateTaxAmount(self, record, stay_id=None, tourist_tax_code=None, **kwargs):
+        stay_id = stay_id or record.get('stay_id')
+        tourist_tax_code = tourist_tax_code or record.get('tourist_tax_code')
 
         if not (stay_id and tourist_tax_code):
             record['tax_amount'] = 0
             return
 
-        # Get stay and facility information
-        stay = self.db.table('host.stay').record(pkey=stay_id).output('dict')
-        if not stay or not stay.get('nights'):
+        stay_rec = self.db.table('host.stay').record(pkey=stay_id, virtual_columns='$nights').output('bag')
+        if not stay_rec or not stay_rec.get('nights'):
             record['tax_amount'] = 0
             return
 
-        nights = stay.get('nights', 0)
-        facility_id = stay.get('facility_id')
+        nights = stay_rec.get('nights', 0)
+        comune_id, localita = self.db.table('host.facility').readColumns(
+                                pkey=stay_rec['facility_id'],
+                                columns='@anagrafica_id.comune_id,@anagrafica_id.localita')
 
-        if not facility_id:
-            record['tax_amount'] = 0
-            return
-
-        # Get facility and anagrafica
-        facility = self.db.table('host.facility').record(pkey=facility_id).output('dict')
-        if not facility:
-            record['tax_amount'] = 0
-            return
-
-        anagrafica_id = facility.get('anagrafica_id')
-        if not anagrafica_id:
-            record['tax_amount'] = 0
-            return
-
-        anagrafica = self.db.table('er_core.anagrafica').record(pkey=anagrafica_id).output('dict')
-        if not anagrafica:
-            record['tax_amount'] = 0
-            return
-
-        # Check preference for comune management
-        use_comuni = self.db.application.getPreference('dati_glbl.comuni_istat', pkg='er_core')
-
-        comune_id = None
-        localita = None
-
-        if use_comuni:
-            comune_id = anagrafica.get('comune_id')
-        else:
-            localita = anagrafica.get('localita')
-
-        if not comune_id and not localita:
-            record['tax_amount'] = 0
-            return
-
-        # Build municipality key
         if comune_id:
             municipality_key = f"{tourist_tax_code}_{comune_id}"
-        else:
+        elif localita:
             municipality_key = f"{tourist_tax_code}_{localita.upper()}"
-
-        # Get tax rate from tourist_tax_municipality
-        tax_municipality = self.db.table('host.tourist_tax_municipality').query(
-            where='$municipality_key=:key',
-            key=municipality_key
-        ).fetchone()
-
-        if not tax_municipality:
+        else:
             record['tax_amount'] = 0
             return
+
+        tax_municipality = self.db.table('host.tourist_tax_municipality').record(
+            where='$municipality_key=:key',
+            key=municipality_key
+        ).output('bag')
 
         tax_rate = tax_municipality.get('amount', 0)
 
@@ -240,23 +357,19 @@ class Table(object):
             record['tax_amount'] = 0
             return
 
-        # Check exemption conditions from municipality
         exemption_conditions = tax_municipality.get('exemption_conditions')
-
-        # If exemption conditions exist and guest_id is available, evaluate them
-        guest_id = record.get('id')
-        if exemption_conditions and guest_id:
-            is_exempt = self._evaluate_exemption_conditions(exemption_conditions=exemption_conditions, guest_id=guest_id)
+        if exemption_conditions:
+            is_exempt = self._evaluate_exemption_conditions(
+                                exemption_conditions=exemption_conditions,
+                                record=record, **kwargs)
             if is_exempt:
                 record['tax_amount'] = 0
                 return
 
-        # Apply max_nights limit if set
         max_nights = tax_municipality.get('max_nights')
         if max_nights and max_nights > 0:
             taxable_nights = min(nights, max_nights)
         else:
             taxable_nights = nights
 
-        # Calculate total
         record['tax_amount'] = taxable_nights * tax_rate

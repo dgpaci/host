@@ -139,7 +139,7 @@ class FormCheckIn(FormFromStay):
                             linkerBar=dict(table='host.guest',
                                           value='^#FORM.current_guest_id',
                                           condition='$stay_id=:stay_id',
-                                          condition_stay_id='^#FORM.record.stay_id',
+                                          condition_stay_id='=#FORM.record.stay_id',
                                           lbl='!![en]Guest',
                                           width='15em',
                                           hasDownArrow=True))
@@ -158,7 +158,7 @@ class FormCheckIn(FormFromStay):
                                 selected_code='#FORM.record.document_issued_by_country')
         fl.field('nazione', lbl='!![en]Country of Residence', colspan=2,validate_notnull=True)
         fl.field('provincia', lbl='!![en]Province', hidden='^.nazione?=#v!="IT"',
-                                validate_notnull='^.nazione?=#v=="IT"', 
+                                validate_notnull='^.nazione?=#v=="IT"',
                                 selected_sigla='#FORM.record.document_issued_by_provincia')
 
     def documentInformations(self, pane):
@@ -184,16 +184,17 @@ class FormCheckIn(FormFromStay):
         fl.field('document_issue_date', lbl='!![en]Issue Date')
         fl.field('document_expiry_date', lbl='!![en]Expiry Date')
         
-    @public_method
-    def calculateTourismTax(self, stay_id=None, tourist_tax_code=None, **kwargs):
-        
-        stay_rec = self.db.table('host.stay').record(pkey=stay_id)
-        return 
-
     def tourismTaxDefinition(self, pane):
         box = pane.styledBox(title='!![en]Tourism Tax', color_variant='yellow')
         self._tourismTaxFields(box)
-
+        pane.onDbChanges("""
+            var that=this;
+            console.log('dbChanges');
+            if(dbChanges && guest_id && dbChanges.some(c => c.pkey==guest_id && c.tax_amount!== null && c.dbevent=='U')){
+                this.form.reload();
+            }
+        """, table='host.guest', guest_id='^#FORM.pkey')
+        
     def _tourismTaxFields(self, box):
         fl = box.formlet(cols=3)
         fl.field('guest_type_code', hasDownArrow=True)
