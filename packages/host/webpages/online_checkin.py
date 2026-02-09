@@ -16,12 +16,7 @@ class GnrCustomWebPage(object):
 
         self.stay_id = stay_id
         bc = root.borderContainer(datapath='online_checkin', height='100%', padding='10px')
-        self.pageHeader(bc.contentPane(region='top', height='40px', _class='checkin_header'))
-        self.pageCenter(bc.contentPane(region='center'))
-        
-    def pageHeader(self, pane):    
-        pane.h3("!![en]Online Check-in", margin_top=0)
-        pane.div("!![en]Please complete your information and add your companions")
+        self.pageCenter(bc.contentPane(region='center'))   
 
     def pageCenter(self, pane): 
         pane.thFormHandler(

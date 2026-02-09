@@ -121,48 +121,66 @@ class FormFromFacility(BaseComponent):
 
 class FormOnlineCheckin(BaseComponent):
     """Form for online check-in webpage"""
+    py_requires = 'host_component:HostComponent'
+    css_requires = 'host'
 
     def th_form(self, form):
         bc = form.center.borderContainer()
-        self.stayInfo(bc.contentPane(region='top', height='100px', datapath='.record'))
-        self.guestInformations(bc.contentPane(region='center'))
-        self.guestsNavigation(bc.contentPane(region='bottom', height='50px'))
-        
+        self.stayInfo(bc.contentPane(region='top', datapath='.record'))
+        self.guestForm(bc.contentPane(region='center'))
+        self.guestsNavigation(bc.contentPane(region='bottom', height='70px'))
+
     def stayInfo(self, pane):
-        """Stay information (readonly)"""
-        fb = pane.formlet(cols=4, border_spacing='4px')
+        box = pane.styledBox(title='!![en]Stay Information', color_variant='blue')
+        self._stayInfoFields(box)
+
+    def _stayInfoFields(self, box):
+        fb = box.formlet(cols=4, border_spacing='8px')
         fb.field('facility_name', lbl='!![en]Facility', readOnly=True, colspan=4)
-        fb.field('check_in_date', readOnly=True)
-        fb.field('check_out_date', readOnly=True)
+        fb.field('check_in_date', lbl='!![en]Check-in', readOnly=True)
+        fb.field('check_out_date', lbl='!![en]Check-out', readOnly=True)
         fb.field('adults_count', lbl='!![en]Adults', readOnly=True)
         fb.field('children_count', lbl='!![en]Children', readOnly=True)
         
-    def guestInformations(self, pane):
-        pane.borderTableHandler(
-            relation='@guests',
-            viewResource='ViewOnlineCheckin',
-            formResource='FormCheckIn',
-            form_showtoolbar=False,
-            addrow=False, 
-            delrow=False, 
-            configurable=False,
-            grid_autoSelect=True,
-            vpane_height='30%'
-        )
+    def guestForm(self, pane):
+        th = pane.thFormHandler(table='host.guest',
+                          formResource='FormCheckIn',
+                          _class='pbl_roundedGroup',
+                          datapath='#FORM.guests',
+                          showtoolbar=False)
+        pane.dataController("""frm.goToRecord(group_leader_id);""", 
+                          group_leader_id='^#FORM.record.group_leader_id', 
+                          frm=th.js_form,
+                          _virtual_columns='group_leader_id', 
+                          _fired='^#FORM.controller.loaded',
+                          _delay=50)
 
     def guestsNavigation(self, pane):
-        """Custom navigation bar with add guest buttons"""
-        pane.dataFormula('') #DP Deve calcolare adulti correnti, bambini correnti, e abilitare/disabilitare bottoni
+        self._guestsFormulas(pane)
+        box = pane.styledBox(color_variant='purple')
+        self._guestsNavigationBar(box)
 
-        bar = pane.slotToolbar('5,adults,children,add_adult,add_child,5')
+    def _guestsFormulas(self, pane):
+        pane.dataFormula('add_adults_enabled', "current_adults < adults_count?true:false",
+                         current_adults='^.current_adults', adults_count='^#FORM.record.adults_count', _onStart=True)
+        pane.dataFormula('add_children_enabled', "add_adults_enabled?false:(current_children < children_count?true:false)",
+                         current_children='^.current_children', children_count='^#FORM.record.children_count')
+
+    def _guestsNavigationBar(self, box):
+        bar = box.slotToolbar('5,adults,children,*,add_adult,add_child,5')
+        self._guestsCounters(bar)
+        self._addGuestButtons(bar)
+
+    def _guestsCounters(self, bar):
         adfb = bar.adults.formbuilder(cols=2)
         adfb.div("^.current_adults", lbl="!![en]Adults:", font_weight='bold')
         adfb.div("^.adults_count", lbl='/', font_weight='bold')
-        
+
         chfb = bar.children.formbuilder(cols=2)
         chfb.div("^.current_children", lbl="!![en]Children:", font_weight='bold')
         chfb.div("^.children_count", lbl='/', font_weight='bold')
 
+    def _addGuestButtons(self, bar):
         bar.add_adult.slotButton('!![en]Add Adult',
                  action="""
                      var stay_id = GET .id;
@@ -173,7 +191,7 @@ class FormOnlineCheckin(BaseComponent):
                          }
                      });
                  """,
-                 disabled='^.can_add_adult?=!#v')
+                 hidden='^.add_adults_enabled?=!#v')
 
         bar.add_child.slotButton('!![en]Add Child',
                  action="""
@@ -185,7 +203,7 @@ class FormOnlineCheckin(BaseComponent):
                          }
                      });
                  """,
-                 disabled='^.can_add_child?=!#v')
+                 hidden='^.add_children_enabled?=!#v')
 
     def th_options(self):
         return dict(dialog_height='600px', dialog_width='900px')

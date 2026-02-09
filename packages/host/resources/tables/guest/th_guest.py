@@ -99,8 +99,7 @@ class FormFromStay(BaseComponent):
         fl.field('cittadinanza')
         fl.field('nazione', lbl='!![en]Country of Residence', validate_notnull=True)
         fl.field('provincia', hidden='^.nazione?=#v!="IT"',
-                                lbl='!![en]Province of Residence',
-                                validate_notnull='^.nazione?=#v=="IT"')
+                                lbl='!![en]Province of Residence')
                  
     def tourismTaxDefinition(self, pane):
         fl = pane.formlet(cols=3)
@@ -125,6 +124,8 @@ class FormFromStay(BaseComponent):
         
 
 class FormCheckIn(FormFromStay):
+    py_requires = 'host_component:HostComponent'
+    css_requires = 'host'
 
     def th_form(self, form):
         bc = form.center.borderContainer(datapath='.record')
@@ -133,38 +134,33 @@ class FormCheckIn(FormFromStay):
         self.tourismTaxDefinition(bc.contentPane(region='bottom'))
 
     def guestPersonalDetails(self, pane):
-        fl = pane.formlet(cols=4, table='er_core.anagrafica', fld_validate_notnull=True)
-        fl.div('!![en]Personal Details', colspan=4, font_weight='bold',
-                        margin_top='10px', margin_bottom='5px')
+        box = pane.styledBox(title='!![en]Personal Details', color_variant='green')
+        self._personalDetailsFields(box)
+
+    def _personalDetailsFields(self, box):
+        fl = box.formlet(cols=4, table='er_core.anagrafica', fld_validate_notnull=True)
         fl.field('nome', colspan=2)
         fl.field('cognome', colspan=2)
         fl.field('sesso', tag='filteringSelect', values='[M:!![en]Male],[F:!![en]Female]')
-        fl.field('data_nascita', validate_notnull=True)
-        fl.field('luogo_nascita')
-        fl.field('nazione_nascita', selected_code='.cittadinanza', validate_notnull=True)
-        fl.field('cittadinanza', validate_notnull=True)
-        fl.field('nazione', lbl='!![en]Country of Residence', validate_notnull=True)
-        fl.field('provincia', hidden='^.nazione?=#v!="IT"',
-                                lbl='!![en]Province of Residence',
+        fl.field('data_nascita', lbl='!![en]D. of Birth', validate_notnull=True)
+        fl.field('nazione_nascita', colspan=2, selected_code='.cittadinanza', validate_notnull=True)
+        fl.field('luogo_nascita', lbl='!![en]P. of Birth', validate_notnull='^.nazione_nascita?=#v=="IT"')
+        fl.field('cittadinanza', colspan=2, validate_notnull=True)
+        fl.field('nazione', lbl='!![en]Country of Residence', colspan=2,validate_notnull=True)
+        fl.field('provincia', lbl='!![en]Province', hidden='^.nazione?=#v!="IT"',
                                 validate_notnull='^.nazione?=#v=="IT"')
-        fl.dbSelect('^#FORM.record.guest_type_code', table='host.guest_type',
-                hasDownArrow=True, lbl='!![en]Guest Type',
-                readOnly='^#FORM.record.is_group_leader',
-                validate_notnull=True)
-        
-        #pane.dataRpc('tax_amount', self.calculateTourismTax, 
-        #                        data_nascita='^.data_nascita', 
-        #                        stay_id='=.stay_id')
-    
+
     def documentInformations(self, pane):
-        fl = pane.formlet(cols=3)
-        fl.div('!![en]Document Information', colspan=3, font_weight='bold',
-                        margin_top='10px', margin_bottom='5px')
+        box = pane.styledBox(title='!![en]Document Information', color_variant='orange')
+        self._documentFields(box)
+
+    def _documentFields(self, box):
+        fl = box.formlet(cols=3)
         fl.field('document_type_code', colspan=2, validate_notnull='^#FORM.record.is_group_leader')
-        fl.field('document_number', validate_notnull='^#FORM.record.is_group_leader')
-        fl.field('document_issued_by', validate_notnull='^#FORM.record.is_group_leader')
-        fl.field('document_issue_date', validate_notnull='^#FORM.record.is_group_leader')
-        fl.field('document_expiry_date', validate_notnull='^#FORM.record.is_group_leader')
+        fl.field('document_number', lbl='!![en]Number', validate_notnull='^#FORM.record.is_group_leader')
+        fl.field('document_issued_by', lbl='!![en]Issued By', validate_notnull='^#FORM.record.is_group_leader')
+        fl.field('document_issue_date', lbl='!![en]Issue Date', validate_notnull='^#FORM.record.is_group_leader')
+        fl.field('document_expiry_date', lbl='!![en]Expiry Date', validate_notnull='^#FORM.record.is_group_leader')
         
     @public_method
     def calculateTourismTax(self, stay_id=None, data_nascita=None, **kwargs):
@@ -172,5 +168,15 @@ class FormCheckIn(FormFromStay):
         stay_rec = self.db.table('host.stay').record(pkey=stay_id)
         return 
 
+    def tourismTaxDefinition(self, pane):
+        box = pane.styledBox(title='!![en]Tourism Tax', color_variant='yellow')
+        self._tourismTaxFields(box)
+
+    def _tourismTaxFields(self, box):
+        fl = box.formlet(cols=3)
+        fl.field('guest_type_code', hasDownArrow=True)
+        fl.field('tourist_tax_code', hasDownArrow=True)
+        fl.field('tax_amount', readOnly=True)
+
     def th_options(self):
-        return dict(dialog_height='480px', dialog_width='700px')
+        return dict(dialog_height='520px', dialog_width='700px')
