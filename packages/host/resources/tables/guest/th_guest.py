@@ -141,7 +141,7 @@ class FormCheckIn(FormFromStay):
         fl = box.formlet(cols=4, table='er_core.anagrafica', fld_validate_notnull=True)
         fl.field('nome', colspan=2)
         fl.field('cognome', colspan=2)
-        fl.field('sesso', tag='filteringSelect', values='[M:!![en]Male],[F:!![en]Female]')
+        fl.field('sesso', tag='filteringSelect', values='M:[!![en]Male],F:[!![en]Female]')
         fl.field('data_nascita', lbl='!![en]D. of Birth', validate_notnull=True)
         fl.field('nazione_nascita', colspan=2, selected_code='.cittadinanza', validate_notnull=True)
         fl.field('luogo_nascita', lbl='!![en]P. of Birth', validate_notnull='^.nazione_nascita?=#v=="IT"')
@@ -163,8 +163,8 @@ class FormCheckIn(FormFromStay):
         fl.field('document_expiry_date', lbl='!![en]Expiry Date', validate_notnull='^#FORM.record.is_group_leader')
         
     @public_method
-    def calculateTourismTax(self, stay_id=None, data_nascita=None, **kwargs):
-        #DP TODO: implement calculation based on specific conditions (e.g. age, residents, etc.)
+    def calculateTourismTax(self, stay_id=None, tourist_tax_code=None, **kwargs):
+        
         stay_rec = self.db.table('host.stay').record(pkey=stay_id)
         return 
 

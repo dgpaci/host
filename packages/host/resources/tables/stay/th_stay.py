@@ -127,8 +127,8 @@ class FormOnlineCheckin(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
         self.stayInfo(bc.contentPane(region='top', datapath='.record'))
-        self.guestForm(bc.contentPane(region='center'))
-        self.guestsNavigation(bc.contentPane(region='bottom', height='70px'))
+        guest_form = self.guestForm(bc.contentPane(region='center'))
+        self.guestsNavigation(bc.contentPane(region='bottom', height='70px'), guest_form=guest_form)
 
     def stayInfo(self, pane):
         box = pane.styledBox(title='!![en]Stay Information', color_variant='blue')
@@ -146,7 +146,8 @@ class FormOnlineCheckin(BaseComponent):
         th = pane.thFormHandler(table='host.guest',
                           formResource='FormCheckIn',
                           _class='pbl_roundedGroup',
-                          datapath='#FORM.guests',
+                          default_stay_id='=#FORM.pkey',
+                          formId='guestsForm',
                           showtoolbar=False)
         pane.dataController("""frm.goToRecord(group_leader_id);""", 
                           group_leader_id='^#FORM.record.group_leader_id', 
@@ -154,56 +155,68 @@ class FormOnlineCheckin(BaseComponent):
                           _virtual_columns='group_leader_id', 
                           _fired='^#FORM.controller.loaded',
                           _delay=50)
+        return th
 
-    def guestsNavigation(self, pane):
+    def guestsNavigation(self, pane, guest_form=None):
         self._guestsFormulas(pane)
         box = pane.styledBox(color_variant='purple')
-        self._guestsNavigationBar(box)
+        self._guestsNavigationBar(box, guest_form=guest_form)
 
     def _guestsFormulas(self, pane):
-        pane.dataFormula('add_adults_enabled', "current_adults < adults_count?true:false",
-                         current_adults='^.current_adults', adults_count='^#FORM.record.adults_count', _onStart=True)
-        pane.dataFormula('add_children_enabled', "add_adults_enabled?false:(current_children < children_count?true:false)",
-                         current_children='^.current_children', children_count='^#FORM.record.children_count')
+        pane.dataFormula('.add_adults_enabled', "current_adults < adults_count?true:false",
+                         current_adults='^#FORM.record.current_adults',
+                         adults_count='^#FORM.record.adults_count', _onStart=True)
+        pane.dataFormula('.add_children_enabled', "add_adults_enabled?false:(current_children < children_count?true:false)",
+                         current_children='^#FORM.record.current_children', 
+                         children_count='^#FORM.record.children_count', 
+                         add_adults_enabled='^.add_adults_enabled')
 
-    def _guestsNavigationBar(self, box):
-        bar = box.slotToolbar('5,adults,children,*,add_adult,add_child,5')
+    def _guestsNavigationBar(self, box, guest_form=None):
+        bar = box.slotToolbar('5,adults,children,*,add_adult,add_child,submit,5', background='transparent')
         self._guestsCounters(bar)
-        self._addGuestButtons(bar)
+        self._addGuestButtons(bar, guest_form=guest_form)
 
     def _guestsCounters(self, bar):
-        adfb = bar.adults.formbuilder(cols=2)
-        adfb.div("^.current_adults", lbl="!![en]Adults:", font_weight='bold')
-        adfb.div("^.adults_count", lbl='/', font_weight='bold')
+        adfb = bar.adults.formbuilder(cols=4)
+        adfb.div("!![en]Adults:")
+        adfb.div("^#FORM.record.current_adults", _virtual_column='$current_adults', font_weight='bold')
+        adfb.div("/")
+        adfb.div("^#FORM.record.adults_count", font_weight='bold')
 
-        chfb = bar.children.formbuilder(cols=2)
-        chfb.div("^.current_children", lbl="!![en]Children:", font_weight='bold')
-        chfb.div("^.children_count", lbl='/', font_weight='bold')
+        chfb = bar.children.formbuilder(cols=4, fld_font_weight='bold')
+        chfb.div("!![en]Children:")
+        chfb.div("^#FORM.record.current_children", _virtual_column='$current_children', font_weight='bold')
+        chfb.div("/")
+        chfb.div("^#FORM.record.children_count", font_weight='bold')
 
-    def _addGuestButtons(self, bar):
+    def _addGuestButtons(self, bar, guest_form=None):
         bar.add_adult.slotButton('!![en]Add Adult',
-                 action="""
-                     var stay_id = GET .id;
-                     genro.serverCall('addGuest', {stay_id: stay_id, is_adult: true}, function(guest_id) {
-                         if (guest_id) {
-                             SET .guests_changed = new Date();
-                             genro.wdgById('guests_handler').widget.openRecord(guest_id);
-                         }
-                     });
-                 """,
-                 hidden='^.add_adults_enabled?=!#v')
+                 hidden='^.add_adults_enabled?=!#v',
+                 disabled='^#guestsForm.controller.valid?=!#v').dataController("""
+                                                                    frm.save();
+                                                                    frm.goToRecord('*newrecord*');
+                                                                    """,
+                                                                    frm=guest_form.js_form,
+                                                                    )
 
         bar.add_child.slotButton('!![en]Add Child',
-                 action="""
-                     var stay_id = GET .id;
-                     genro.serverCall('addGuest', {stay_id: stay_id, is_adult: false}, function(guest_id) {
-                         if (guest_id) {
-                             SET .guests_changed = new Date();
-                             genro.wdgById('guests_handler').widget.openRecord(guest_id);
-                         }
-                     });
-                 """,
-                 hidden='^.add_children_enabled?=!#v')
+                 hidden='^.add_children_enabled?=!#v',
+                 disabled='^#guestsForm.controller.valid?=!#v').dataController("""
+                                                                    frm.save();
+                                                                    frm.goToRecord('*newrecord*');
+                                                                    """,
+                                                                    frm=guest_form.js_form,
+                                                                    )
+        bar.submit.slotButton('!![en]Submit Check-in', 
+                hidden='==(add_adults_enabled || add_children_enabled)',
+                add_adults_enabled='^.add_adults_enabled',
+                add_children_enabled='^.add_children_enabled',
+                disabled='^#guestsForm.controller.valid?=!#v').dataController("""
+                                                                    frm.save();
+                                                                    genro.publish('submit_online_checkin');
+                                                                    """,
+                                                                    frm=guest_form.js_form,
+                                                                    )
 
     def th_options(self):
         return dict(dialog_height='600px', dialog_width='900px')

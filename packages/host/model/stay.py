@@ -64,6 +64,21 @@ class Table(object):
                           ).relation('host.guest.id', one_one='*')
         tbl.aliasColumn('group_leader_name', '@group_leader_id.full_name',
                        name_long='!![en]Group Leader Name')
+
+        tbl.formulaColumn('current_adults', "COALESCE(#curr_adults, 0)",
+                         select_curr_adults=dict(table='host.guest',
+                                   where="""$stay_id=#THIS.id AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) >= 18""",
+                                   columns='COUNT(*)'),
+                         dtype='I', name_long='!![en]Current Adults')
+
+        tbl.formulaColumn('current_children', "COALESCE(#curr_children, 0)",
+                          select_curr_children=dict(table='host.guest',
+                                   where="""$stay_id=#THIS.id AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) < 18""",
+                                   columns='COUNT(*)'),
+                          dtype='I', name_long='!![en]Current Children')
+
         tbl.pyColumn('checkin_url', required_columns='$id')
         tbl.pyColumn('checkin_url_qrcode', required_columns='$id')
 
