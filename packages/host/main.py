@@ -18,6 +18,10 @@ class Package(GnrDboPackage):
     def config_db(self, pkg):
         """Package configuration"""
         pass
+    
+    def required_packages(self):
+        return ['erpyready:er_core']
+
 
 class Table(GnrDboTable):
     """Base table class for host package"""

@@ -1,0 +1,76 @@
+.current_stay{
+    color: darkblue;
+    font-style: italic;
+}
+
+/* Styled boxes for forms */
+.styledBox {
+    margin: 5px;
+    padding: 10px;
+    border-radius: 8px;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.styledBoxTitleBar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.styledBoxTitle {
+    font-size: 14px;
+    font-weight: bold;
+    flex: 1;
+}
+
+/* Blue variant - Stay Info */
+.styledBox-blue {
+    background-color: #e3f2fd;
+    border-color: #90caf9;
+}
+
+.styledBoxTitle-blue {
+    color: #1565c0;
+}
+
+/* Purple variant - Add Guests */
+.styledBox-purple {
+    background-color: #f3e5f5;
+    border-color: #ce93d8;
+}
+
+.styledBoxTitle-purple {
+    color: #7b1fa2;
+}
+
+/* Green variant - Personal Details */
+.styledBox-green {
+    background-color: #e8f5e9;
+    border-color: #81c784;
+}
+
+.styledBoxTitle-green {
+    color: #2e7d32;
+}
+
+/* Orange variant - Document Info */
+.styledBox-orange {
+    background-color: #fff3e0;
+    border-color: #ffb74d;
+}
+
+.styledBoxTitle-orange {
+    color: #e65100;
+}
+
+/* Yellow variant - Tourism Tax */
+.styledBox-yellow {
+    background-color: #fff9c4;
+    border-color: #ffd54f;
+}
+
+.styledBoxTitle-yellow {
+    color: #f57f17;
+}

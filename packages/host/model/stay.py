@@ -8,49 +8,86 @@ class Table(object):
         tbl = pkg.table(
             'stay',
             pkey='id',
-            name_long='Stay',
-            name_plural='Stays',
+            name_long='!![en]Stay',
+            name_plural='!![en]Stays',
             caption_field='stay_caption'
         )
 
         self.sysFields(tbl)
 
-        tbl.column('facility_id', size='22', name_long='Facility', validate_notnull=True)\
+        tbl.column('facility_id', size='22', name_long='!![en]Facility', validate_notnull=True)\
             .relation('host.facility.id', mode='foreignkey',
                      relation_name='stays', onDelete='raise')
 
-        tbl.column('check_in_date', dtype='D', name_long='Check-in Date', validate_notnull=True,
-                   name_short='Check-in')
+        tbl.column('check_in_date', dtype='D', name_long='!![en]Check-in Date', validate_notnull=True,
+                   name_short='!![en]Check-in')
 
-        tbl.column('check_out_date', dtype='D', name_long='Check-out Date', validate_notnull=True,
-                   name_short='Check-out')
+        tbl.column('check_out_date', dtype='D', name_long='!![en]Check-out Date', validate_notnull=True,
+                   name_short='!![en]Check-out')
 
-        # Calculated field: number of nights
+        tbl.column('arrival_time', dtype='H', name_long='!![en]Arrival Time',
+                   name_short='!![en]Arrival')
+
+        tbl.column('flight_number', size='20', name_long='!![en]Flight Number',
+                   name_short='!![en]Flight')
+
+        tbl.column('safe_code', size='4', name_long='!![en]Safe Code',
+                   name_short='!![en]Safe')
+
+        tbl.column('adults_count', dtype='I', name_long='!![en]Number of Adults',
+                   name_short='!![en]Adults', validate_notnull=True, default=1)
+        tbl.column('children_count', dtype='I', name_long='!![en]Number of Children',
+                   name_short='!![en]Children', validate_notnull=True, default=0)
+
         tbl.formulaColumn('nights', "($check_out_date - $check_in_date)",
-                         dtype='I', name_long='Number of Nights', name_short='Nights')
+                         dtype='I', name_long='!![en]Number of Nights', name_short='!![en]Nights')
 
-        # Alias columns
-        tbl.aliasColumn('facility_name', '@facility_id.name', name_long='Facility Name')
-        tbl.aliasColumn('facility_type', '@facility_id.@facility_type_id.description',
-                       name_long='Facility Type')
+        tbl.formulaColumn('total_guests', "COALESCE($adults_count, 0) + COALESCE($children_count, 0)",
+                         dtype='I', name_long='!![en]Total Guests', name_short='!![en]Guests')
 
-        # Virtual column for caption (will be set via formula)
+        tbl.aliasColumn('max_beds', '@facility_id.max_beds', name_long='!![en]Max Beds')
+        tbl.aliasColumn('facility_name', '@facility_id.name', name_long='!![en]Facility Name')
+        tbl.aliasColumn('facility_type', '@facility_id.@facility_type_code.description',
+                       name_long='!![en]Facility Type')
+
         tbl.formulaColumn('stay_caption',
                          """$facility_name || ' - ' || COALESCE(TO_CHAR($check_in_date, 'DD/MM/YYYY'), 'N/A')""",
-                         name_long='Stay Caption')
+                         name_long='!![en]Stay Caption')
+        tbl.formulaColumn('is_current', """$check_in_date <= :env_workdate AND $check_out_date >= :env_workdate""",
+                         dtype='B', name_long='!![en]Is Current', _addClass='current_stay')
+        #tbl.joinColumn('group_leader_id', name_long='!![en]Group Leader').relation('host.guest.id',
+        #                cnd='@group_leader_id.stay_id=$id AND @group_leader_id.@guest_type_code.is_leader IS TRUE'
+        #                ) #DP It doesn't work like this
+        tbl.formulaColumn('group_leader_id', select=dict(table='host.guest',
+                                                         where='$stay_id=#THIS.id AND $is_group_leader IS TRUE',
+                                                         columns='$id', limit=1), name_long='!![en]Group Leader'
+                          ).relation('host.guest.id', one_one='*')
+        tbl.aliasColumn('group_leader_name', '@group_leader_id.full_name',
+                       name_long='!![en]Group Leader Name')
 
-    def trigger_onInserting(self, record=None, **kwargs):
-        """Validate dates before insert"""
-        self._validate_dates(record)
+        tbl.formulaColumn('current_adults', "COALESCE(#curr_adults, 0)",
+                         select_curr_adults=dict(table='host.guest',
+                                   where="""$stay_id=#THIS.id AND
+                                           @anagrafica_id.data_nascita IS NOT NULL AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) >= 12""",
+                                   columns='COUNT(*)'),
+                         dtype='I', name_long='!![en]Current Adults')
 
-    def trigger_onUpdating(self, record=None, old_record=None, **kwargs):
-        """Validate dates before update"""
-        self._validate_dates(record)
+        tbl.formulaColumn('current_children', "COALESCE(#curr_children, 0)",
+                          select_curr_children=dict(table='host.guest',
+                                   where="""$stay_id=#THIS.id AND
+                                           @anagrafica_id.data_nascita IS NOT NULL AND
+                                           EXTRACT(YEAR FROM AGE(#THIS.check_in_date, @anagrafica_id.data_nascita)) < 12""",
+                                   columns='COUNT(*)'),
+                          dtype='I', name_long='!![en]Current Children')
 
-    def _validate_dates(self, record):
-        """Ensure check-out date is after check-in date"""
-        check_in = record.get('check_in_date')
-        check_out = record.get('check_out_date')
+        tbl.pyColumn('checkin_url', required_columns='$id')
+        tbl.pyColumn('checkin_url_qrcode', required_columns='$id')
 
-        if check_in and check_out and check_out <= check_in:
-            raise Exception("Check-out date must be after check-in date")
+    def pyColumn_checkin_url(self,record,field):
+        return self.db.application.site.externalUrl('/host/online_checkin',stay_id=record['id'])
+    
+    def pyColumn_checkin_url_qrcode(self,record,field):
+        extUrl = self.db.application.site.externalUrl('/host/online_checkin',stay_id=record['id'])
+        extQrcode = self.db.application.site.externalUrl(f'/_tools/qrcode?text={extUrl}')
+        return f'<img class="img_qrcode" src="{extQrcode}"/>'

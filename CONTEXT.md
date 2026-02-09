@@ -29,14 +29,15 @@ The Host Management System is a Genropy/Erpy package for managing accommodation 
         ├── resources/
         │   ├── services/     # Business logic services
         │   └── tables/       # UI table handlers (th_*.py)
-        └── webpages/         # Web pages (empty for now)
+        └── webpages/         # Web pages
+            └── index.py      # Main page (required for mainpackage)
 ```
 
 ## Database Architecture
 
 ### Schema: `host`
 
-All tables use the `host` SQL schema. Integration with `erpy_base` schema for anagrafica (registry) and `glbl` schema for ISTAT codes.
+All tables use the `host` SQL schema. Integration with `erpyready` schema for anagrafica (registry) and `glbl` schema for ISTAT codes.
 
 ### Core Tables
 
@@ -108,7 +109,7 @@ Tourist tax rates and exemption codes.
 #### 5. `facility`
 Accommodation facilities registry.
 - `id` (PK)
-- `anagrafica_id` (FK to `erpy_base.anagrafica`) - Owner/Manager
+- `anagrafica_id` (FK to `erpyready.anagrafica`) - Owner/Manager
 - `name` - Facility name
 - `facility_type_id` (FK to `facility_type`)
 
@@ -117,24 +118,40 @@ Accommodation facilities registry.
 - One facility_type per facility
 
 #### 6. `guest`
-Guest registry with document information.
+Guest records for accommodation stays.
 - `id` (PK)
-- `anagrafica_id` (FK to `erpy_base.anagrafica`) - Personal data
-- `document_type_id` (FK to `document_type`)
+- `stay_id` (FK to `stay`) - Stay reference
+- `anagrafica_id` (FK to `erpyready.anagrafica`) - Personal data
+- `guest_type_id` (FK to `guest_type`) - Guest type (single, family head, group head, member)
+- `tourist_tax_id` (FK to `tourist_tax`) - Tax rate or exemption
+- `document_type_id` (FK to `document_type`) - Document type
 - `document_number` - Document number
 - `document_issued_by` - Issuing authority/place
 - `document_issue_date` - Issue date (D)
 - `document_expiry_date` - Expiry date (D)
+- `tax_amount` - **Calculated field** (nights × tax_rate per municipality)
 
 **Business rules**:
+- Each guest belongs to one stay
 - Document fields are **required only for group leaders** (guest types 17, 18)
-- Personal data (name, surname, birth date, etc.) stored in `erpy_base.anagrafica`
-- One guest can have multiple stays
+- Personal data (name, surname, birth date, etc.) stored in `erpyready.anagrafica`
+- If the same person returns, create a new guest record referencing the same anagrafica
+- Tax amount auto-calculated based on stay nights and tax rate for facility's municipality
 
 **Alias columns** (for UI display):
-- `guest_name` - From anagrafica.ragione_sociale
-- `guest_birth_date` - From anagrafica.data_nascita
-- `guest_citizenship` - From anagrafica.cittadinanza
+- `full_name` - From @anagrafica_id.ragione_sociale
+- `surname` - From @anagrafica_id.cognome
+- `name` - From @anagrafica_id.nome
+- `birth_date` - From @anagrafica_id.data_nascita
+- `citizenship` - From @anagrafica_id.cittadinanza
+- `guest_type_code` - From @guest_type_id.code
+- `guest_type_description` - From @guest_type_id.description
+- `is_group_leader` - From @guest_type_id.is_leader (calculated)
+- `tax_description` - From @tourist_tax_id.description
+- `stay_check_in` - From @stay_id.check_in_date
+- `stay_check_out` - From @stay_id.check_out_date
+- `stay_nights` - From @stay_id.nights
+- `facility_name` - From @stay_id.@facility_id.name
 
 #### 7. `stay`
 Accommodation stays (check-in to check-out period).
@@ -157,40 +174,15 @@ Accommodation stays (check-in to check-out period).
 **Alias columns**:
 - `facility_name` - From @facility_id.name
 - `facility_type` - From @facility_id.@facility_type_id.description
+- `group_leader_name` - Calculated from guests with is_group_leader=TRUE
 
-#### 8. `stay_guest` (Many-to-Many Junction Table)
-Links stays to guests with tax information.
-- `id` (PK)
-- `stay_id` (FK to `stay`)
-- `guest_id` (FK to `guest`)
-- `guest_type_id` (FK to `guest_type`) - **Required**
-- `tourist_tax_id` (FK to `tourist_tax`)
-- `tax_amount` - **Calculated field** (nights × tax_rate)
-
-**Business logic**:
-- Each stay must have at least one group leader (guest_type code '17' or '18')
-- Tax amount auto-calculated: `@stay_id.nights * @tourist_tax_id.amount`
-- Multiple guests per stay, each with their own tax rate
-
-**Alias columns for UI**:
-- `guest_name` - From @guest_id.@anagrafica_id.ragione_sociale
-- `guest_surname` - From @guest_id.@anagrafica_id.cognome
-- `guest_birth_date` - From @guest_id.@anagrafica_id.data_nascita
-- `guest_type_code` - From @guest_type_id.code
-- `guest_type_description` - From @guest_type_id.description
-- `is_group_leader` - From @guest_type_id.is_leader (calculated)
-- `tax_description` - From @tourist_tax_id.description
-
-**Formula column**:
-```python
-tbl.formulaColumn('tax_amount',
-                 '@stay_id.nights * @tourist_tax_id.amount',
-                 dtype='N', name_long='Tax Amount')
-```
+**Relations**:
+- One stay has many guests (relation name: `@guests`)
+- Each stay should have at least one group leader (guest_type code '17' or '18')
 
 ### Integration with Erpy Base
 
-#### `erpy_base.anagrafica`
+#### `erpyready.anagrafica`
 Central registry for personal/company data. Used for:
 - Facility owners/managers
 - Guest personal information
@@ -223,7 +215,7 @@ Generates police report in Italian ISTAT format (178 characters per guest).
 
 **Methods**:
 - `export_stay(stay_id)` - Returns string with 178-char lines (one per guest)
-- `_format_guest_line(stay, stay_guest)` - Formats single guest record
+- `_format_guest_line(stay, guest)` - Formats single guest record
 - `_pad(value, length, field_type)` - Pads values ('N'=numeric left-pad zeros, 'A'/'AN'=alpha right-pad spaces)
 - `_get_comune_istat(comune_name)` - Fetches ISTAT code from glbl.comune
 - `_get_country_code(country_code)` - Fetches numeric code from glbl.nazione
@@ -287,44 +279,76 @@ Host Management
 
 #### `th_stay.py`
 **View**:
-- Shows: facility_name, check_in_date, check_out_date, nights, group_leader_name
-- Group leader name calculated via SQL:
-  ```sql
-  SELECT g.ragione_sociale
-  FROM host.stay_guest sg
-  JOIN host.guest gu ON sg.guest_id = gu.id
-  JOIN erpy_base.anagrafica g ON gu.anagrafica_id = g.id
-  JOIN host.guest_type gt ON sg.guest_type_id = gt.id
-  WHERE sg.stay_id = $id AND gt.code IN ('17', '18')
-  LIMIT 1
+- Shows: facility_name, check_in_date, check_out_date, nights, arrival_time, flight_number, group_leader_name
+- Group leader name calculated via formulaColumn:
+  ```python
+  tbl.formulaColumn('group_leader_name', select=dict(
+      table='host.guest',
+      where='$stay_id=#THIS.id AND $is_group_leader IS TRUE',
+      columns='$full_name'), name_long='Group Leader Name')
   ```
 - Default order: `check_in_date DESC`
 
 **Form**:
-- Top section: facility_id, check_in_date, check_out_date, nights (readonly)
-- Tab 1 (Guests): dialogTableHandler for stay_guests relation
+- Top section: facility_id, check_in_date, check_out_date, arrival_time, flight_number, safe_code
+- Tab 1 (Guests): dialogTableHandler for @guests relation
 - Tab 2 (Export Police Report): Button to export TXT file
 
-**ViewFromStay** (stay_guests relation):
-- Shows: guest_name, guest_type_description, guest_birth_date, tax_description, tax_amount
-- Order by: guest_type_code, guest_surname
+**ViewFromFacility** (for display in facility form):
+- Shows: check_in_date, check_out_date, nights, group_leader_name
+- Order by: check_in_date DESC
 
-**FormFromStay** (stay_guests relation):
-- Fields: guest_id (with birth_date, citizenship auxColumns), guest_type_id, tourist_tax_id, tax_amount (readonly)
+**FormFromFacility** (for creating stays from facility):
+- Top section: check_in_date, check_out_date, arrival_time, flight_number, safe_code
+- Tab: Guests with multiButtonForm for inline guest creation
 
 #### `th_guest.py`
 **View**:
-- Shows: guest_name, guest_birth_date, guest_citizenship, document_type_description, document_number
+- Shows: facility_name, stay_check_in, stay_check_out, full_name, guest_type_description, tax_amount
+- Default order: stay_check_in DESC, guest_type_code
 
 **Form**:
-- Top section: anagrafica_id (with birth_date, citizenship auxColumns)
-- Tab 1 (Document): document_type_id, document_number, document_issued_by, document_issue_date, document_expiry_date
-- Tab 2 (Stays): dialogTableHandler for stays relation
+- Top section: anagrafica_id, guest_type_id, tourist_tax_id, tax_amount (readonly)
+- Document section: document_type_id, document_number, document_issued_by, document_issue_date, document_expiry_date
+
+**FormFromStay** (for creating guests within a stay):
+- Uses AnagraficaComponent from er_core for inline anagrafica creation
+- Guest information: guest_type_id, tourist_tax_id, tax_amount
+- Document information section
+
+**ViewFromStay** (for display in stay form):
+- Shows: full_name, guest_type_description, birth_date, tax_description, tax_amount
+- Order by: guest_type_code, surname
+
+### Resource Placement Best Practices
+
+**CRITICAL RULE**: Custom view resources (like `ViewFromFacility`, `ViewFromStay`, etc.) must be defined in the resource file of the **table being displayed**, not in the resource file of the table that calls them.
+
+**Example**:
+```python
+# In th_facility.py Form:
+stays_tab.dialogTableHandler(relation='@stays',
+                             viewResource='ViewFromFacility')
+
+# The ViewFromFacility class MUST be in th_stay.py (NOT in th_facility.py)
+# because it's displaying stay records
+```
+
+**Why**:
+- Genropy's resource resolution looks for custom views in the target table's resource file
+- This keeps view logic with the data it displays
+- Prevents resource resolution errors and missing views
+- Follows separation of concerns: each table's resource file defines how that table is viewed
+
+**Pattern to follow**:
+- `ViewFromX` classes go in the resource file of the **child table** (the many side of the relation)
+- `FormFromX` classes go in the resource file of the **child table** (the many side of the relation)
+- The parent table's form just references these resources by name
 
 ## Architectural Decisions
 
 ### 1. Anagrafica Integration
-**Decision**: Store personal data in centralized `erpy_base.anagrafica` registry.
+**Decision**: Store personal data in centralized `erpyready.anagrafica` registry.
 
 **Rationale**:
 - Avoid data duplication
@@ -332,7 +356,7 @@ Host Management
 - Facility owners already in anagrafica
 - Consistent with Erpy architecture
 
-**Trade-off**: Requires erpy_base package dependency
+**Trade-off**: Requires erpyready package dependency
 
 ### 2. Guest Type System
 **Decision**: Use official Italian guest type codes (16-20) with FK instead of boolean flag.
@@ -355,8 +379,22 @@ Host Management
 
 **Implementation**: Validation not enforced in database model, handled in application logic.
 
-### 4. Calculated Fields
-**Decision**: Use formula columns for nights, tax_amount, is_leader.
+### 4. Guest-Stay Relationship
+**Decision**: Each guest belongs to one stay (one-to-many), not many-to-many.
+
+**Rationale**:
+- Simplifies data model and reduces complexity
+- If same person returns, create new guest record referencing same anagrafica
+- Anagrafica contains permanent personal data, guest is stay-specific
+- Easier queries and better performance
+- Reflects reality: each guest record is for a specific booking
+
+**Trade-off**:
+- Multiple guest records for repeat visitors
+- Mitigated by: easy to create new guest from existing anagrafica via UI
+
+### 5. Calculated Fields
+**Decision**: Use formula columns and triggers for automatic calculations.
 
 **Rationale**:
 - Automatic calculation ensures consistency
@@ -365,11 +403,12 @@ Host Management
 - Reduces application logic
 
 **Examples**:
-- `nights = check_out_date - check_in_date`
-- `tax_amount = @stay_id.nights * @tourist_tax_id.amount`
-- `is_leader = $code IN ('17', '18')`
+- `nights = check_out_date - check_in_date` (formula column)
+- `is_leader = $code IN ('17', '18')` (formula column)
+- `tax_amount` calculated via trigger based on nights × tax_rate for facility's municipality
+- `group_leader_name` calculated via select formula from guests
 
-### 5. Stay-centric View
+### 6. Stay-centric View
 **Decision**: UI shows stays with group leader name, not individual guests in list view.
 
 **Rationale**:
@@ -378,7 +417,7 @@ Host Management
 - Group leader is primary contact
 - Detail view shows all guests
 
-### 6. Italian Compliance
+### 7. Italian Compliance
 **Decision**: Follow official Italian codes and formats exactly.
 
 **Rationale**:
@@ -484,6 +523,15 @@ When implementing new features:
 
 ## Version History
 
+- **2.0.0** (2026-01-26): Major refactoring
+  - Simplified data model: guest belongs to one stay (one-to-many instead of many-to-many)
+  - Removed `stay_guest` junction table
+  - Integration with `er_core:erpy_ready` instead of `erpy:erpy_base`
+  - All lookup tables use `code` as primary key with `lookup=True`
+  - Mandatory sysRecord for guest types (5 codes) and tourist tax codes (9 codes)
+  - Improved tax calculation with municipality-specific rates via bag structure
+  - Tax amount calculated via trigger instead of formula column
+
 - **1.0.0** (2026-01-23): Initial release
   - Complete facility and guest management
   - Stay tracking with automatic calculations
@@ -506,7 +554,7 @@ stays = db.table('host.stay').query(
 
 **Get group leader for a stay**:
 ```python
-leader = db.table('host.stay_guest').query(
+leader = db.table('host.guest').query(
     where='$stay_id=:sid AND @guest_type_id.code IN :codes',
     sid=stay_id,
     codes=['17', '18']
@@ -515,7 +563,7 @@ leader = db.table('host.stay_guest').query(
 
 **Calculate total tax for a stay**:
 ```python
-total_tax = db.table('host.stay_guest').query(
+total_tax = db.table('host.guest').query(
     columns='SUM($tax_amount) AS total',
     where='$stay_id=:sid',
     sid=stay_id
@@ -536,8 +584,156 @@ service = PoliceExportService(db)
 content = service.export_stay(stay_id)
 ```
 
+## Genropy Instance Setup
+
+### Instance Structure
+
+A Genropy instance requires the following structure:
+
+```
+instances/demohotel/
+├── config/
+│   └── instanceconfig.xml    # Instance configuration
+├── root.py                     # WSGI entry point
+├── site/                       # Site data (auto-created)
+└── .gitignore
+```
+
+### Required Files
+
+#### 1. `config/instanceconfig.xml`
+
+```xml
+<?xml version="1.0" ?>
+<GenRoBag>
+    <db dbname="demohotel"/>
+
+    <packages>
+        <gnrcore_sys pkgcode="gnrcore:sys"/>
+        <gnrcore_adm pkgcode="gnrcore:adm"/>
+        <gnr_it_glbl pkgcode="gnr_it:glbl"/>
+        <erpyready pkgcode="erpyready:er_core"/>
+        <host pkgcode="host:host"/>
+    </packages>
+
+    <authentication pkg="gnrcore:sys">
+        <py_auth defaultTags="user" method="authenticate" pkg="adm"/>
+    </authentication>
+
+    <site>
+        <wsgi mainpackage="host" debug="true" port="8090"/>
+    </site>
+</GenRoBag>
+```
+
+**Important notes**:
+- Core packages use `gnrcore_` prefix and `pkgcode="gnrcore:sys"` format
+- Italian global data: `gnr_it_glbl` with `pkgcode="gnr_it:glbl"`
+- Erpy packages: `erpyready` with `pkgcode="erpyready:er_core"`
+- Local packages: `host` with `pkgcode="host:host"`
+- **erpyready is required** because host uses erpyreadydy.anagrafica` table
+
+#### 2. `root.py`
+
+Standard WSGI entry point:
+
+```python
+#!/usr/bin/env python
+import sys
+sys.stdout = sys.stderr
+from gnr.web.gnrwsgisite import GnrWsgiSite
+site = GnrWsgiSite(__file__)
+
+def application(environ,start_response):
+    return site(environ,start_response)
+
+if __name__ == '__main__':
+    from gnr.web.server import NewServer
+    server=NewServer(__file__)
+    server.run()
+```
+
+#### 3. `packages/host/webpages/index.py`
+
+**Required** for mainpackage to work:
+
+```python
+#!/usr/bin/env pythonw
+# -*- coding: utf-8 -*-
+
+class GnrCustomWebPage(object):
+    py_requires = 'frameindex'
+    auth_workdate = 'admin,user'
+
+    def windowTitle(self):
+        owner_name = self.getPreference('instance_data.owner_name', pkg='adm')
+        return owner_name or 'Host Management System'
+```
+
+**Without this file, the instance will not start properly.**
+
+#### 4. `packages/host/menu.py`
+
+Already exists in the package root. Defines menu structure:
+
+```python
+class Menu(object):
+    def config(self, root, **kwargs):
+        host = root.branch("Host Management", tags="host")
+
+        # Master Data
+        anagrafica = host.branch("Master Data", tags="masterdata")
+        anagrafica.thpage("Facilities", table="host.facility")
+        anagrafica.thpage("Facility Types", table="host.facility_type")
+        anagrafica.thpage("Guests", table="host.guest")
+        anagrafica.thpage("Guest Types", table="host.guest_type")
+        anagrafica.thpage("Document Types", table="host.document_type")
+        anagrafica.thpage("Tourist Tax Rates", table="host.tourist_tax")
+
+        # Operations
+        operations = host.branch("Operations", tags="operations")
+        operations.thpage("Stays", table="host.stay")
+```
+
+### Database Migration
+
+**Correct command**:
+```bash
+gnr db migrate demohotel
+```
+
+**NOT**: `gnrmigrate` (old command)
+
+### Initialization Steps
+
+1. Create PostgreSQL database:
+   ```bash
+   createdb -U postgres demohotel
+   ```
+
+2. Run migration:
+   ```bash
+   cd /Users/dgpaci/sviluppo/erpy_projects/host
+   gnr db migrate demohotel
+   ```
+
+3. Load initial data:
+   ```bash
+   psql -U postgres -d demohotel -f initial_data.sql
+   ```
+
+4. Start instance:
+   ```bash
+   cd instances/demohotel
+   python root.py
+   # Or: gnrwsgi demohotel
+   ```
+
+5. Access at: http://localhost:8090
+
 ## Related Documentation
 
 - README.md - User-facing documentation
 - initial_data.sql - Lookup table data with official codes
 - GitHub Issues - Planned features and enhancements
+- instances/demohotel/README.md - Instance setup guide

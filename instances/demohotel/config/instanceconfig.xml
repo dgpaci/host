@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<GenRoBag>
+	<db dbname="demohotel"/>
+
+	<packages>
+		<gnrcore_sys pkgcode="gnrcore:sys"/>
+		<gnrcore_adm pkgcode="gnrcore:adm"/>
+		<gnr_it_glbl pkgcode="gnr_it:glbl"/>
+		<erpyready_er_core pkgcode="erpyready:er_core"/>
+		<host pkgcode="host:host"/>
+	</packages>
+
+	<menu package="*"/>
+
+	<authentication pkg="gnrcore:sys">
+		<py_auth defaultTags="user" method="authenticate" pkg="adm"/>
+	</authentication>
+
+	<site>
+		<wsgi mainpackage="host" debug="true" port="8090"/>
+	</site>
+</GenRoBag>

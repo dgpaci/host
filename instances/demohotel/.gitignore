@@ -1,0 +1,26 @@
+# Genropy instance generated files
+
+# Site data directory
+site/
+
+# Session data
+sessions/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.pyc
+__pycache__/
+
+# Local configuration overrides
+config/instanceconfig.local.xml
+
+# Compiled Python
+*.pyo
+
+# Database dumps
+*.sql.gz
+*.dump

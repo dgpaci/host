@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from gnr.web.gnrwebpage import BaseComponent
+from gnr.web.gnrbaseclasses import BaseComponent
+
 
 class View(BaseComponent):
     def th_struct(self, struct):
         r = struct.view().rows()
         r.fieldcell('code', width='12em')
         r.fieldcell('description', width='100%')
-        r.fieldcell('amount', width='10em', dtype='N')
         return struct
 
     def th_order(self):
@@ -20,11 +20,23 @@ class View(BaseComponent):
 class Form(BaseComponent):
     def th_form(self, form):
         bc = form.center.borderContainer()
-        top = bc.contentPane(region='top', datapath='.record')
-        fb = top.formbuilder(cols=2, border_spacing='4px')
-        fb.field('code', width='15em')
-        fb.field('description', width='50em', colspan=2)
-        fb.field('amount', width='15em')
+        self.taxInformations(bc.contentPane(region='top', height='60px', datapath='.record'))
+        self.taxAmounts(bc.contentPane(region='center', margin='2px'))
+
+    def taxInformations(self, pane):
+        fb = pane.formlet(cols=3)
+        fb.field('code')
+        fb.field('description', colspan=2)
+
+    def taxAmounts(self, pane):
+        pane.dialogTableHandler(
+            relation='@municipalities',
+            viewResource='ViewMunicipalities',
+            formResource='FormFromTax',
+            addrow=False,
+            delrow=False,
+            pbl_classes=True
+        )
 
     def th_options(self):
-        return dict(dialog_height='250px', dialog_width='600px')
+        return dict(dialog_height='500px', dialog_width='700px')
