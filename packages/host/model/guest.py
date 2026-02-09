@@ -86,11 +86,79 @@ class Table(object):
         """Recalculate tax amount on update"""
         self._calculate_tax_amount(record)
 
+    def _evaluate_exemption_conditions(self, exemption_conditions=None, guest_id=None):
+        """
+        Evaluate exemption conditions from bag against guest data.
+        Returns True if all conditions are met (guest is exempt).
+
+        Follows the pattern from compileCustomizedQuestions in webex.registration_form
+
+        Conditions format in bag:
+        - column: column name from guest table (e.g., 'age', 'citizenship')
+        - operator: comparison operator ('<', '>', '==', '!=', '<=', '>=')
+        - value: comparison value (fixed value or column reference with $)
+        """
+        if not exemption_conditions or not guest_id:
+            return False
+
+        from gnr.core.gnrbag import Bag
+
+        conditions = exemption_conditions.values() if isinstance(exemption_conditions, Bag) else exemption_conditions
+
+        for condition in conditions:
+            if not isinstance(condition, dict):
+                continue
+
+            column = condition.get('column')
+            operator = condition.get('operator')
+            compare_value = condition.get('value')
+
+            if not column or not operator:
+                continue
+
+            # Read the column value from the guest table
+            column_value = self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=f'${column}')
+
+            if column_value is None:
+                return False
+
+            # If compare_value starts with $, read it from the guest table too
+            if isinstance(compare_value, str) and compare_value.startswith('$'):
+                compare_value = self.readColumns(where='$id=:guest_id', guest_id=guest_id, columns=f'{compare_value}')
+
+            # Perform comparison
+            try:
+                if operator == '<':
+                    if not (column_value < compare_value):
+                        return False
+                elif operator == '>':
+                    if not (column_value > compare_value):
+                        return False
+                elif operator == '<=':
+                    if not (column_value <= compare_value):
+                        return False
+                elif operator == '>=':
+                    if not (column_value >= compare_value):
+                        return False
+                elif operator == '==':
+                    if not (column_value == compare_value):
+                        return False
+                elif operator == '!=':
+                    if not (column_value != compare_value):
+                        return False
+                else:
+                    return False
+            except (TypeError, ValueError):
+                return False
+
+        return True
+
     def _calculate_tax_amount(self, record):
         """
         Calculate total tax amount based on:
         - Number of nights from stay
         - Tax rate from tourist_tax_municipality
+        - Exemption conditions evaluation
         """
         stay_id = record.get('stay_id')
         tourist_tax_code = record.get('tourist_tax_code')
@@ -164,6 +232,17 @@ class Table(object):
         if not tax_rate:
             record['tax_amount'] = 0
             return
+
+        # Check exemption conditions from municipality
+        exemption_conditions = tax_municipality.get('exemption_conditions')
+
+        # If exemption conditions exist and guest_id is available, evaluate them
+        guest_id = record.get('id')
+        if exemption_conditions and guest_id:
+            is_exempt = self._evaluate_exemption_conditions(exemption_conditions=exemption_conditions, guest_id=guest_id)
+            if is_exempt:
+                record['tax_amount'] = 0
+                return
 
         # Apply max_nights limit if set
         max_nights = tax_municipality.get('max_nights')

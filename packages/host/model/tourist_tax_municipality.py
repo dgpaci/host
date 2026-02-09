@@ -32,6 +32,9 @@ class Table(object):
                    name_short='!![en]Max Nights',
                    tip='!![en]Maximum number of consecutive nights for which the tax applies. Leave empty for no limit.')
 
+        tbl.column('exemption_conditions', dtype='X', name_long='!![en]Exemption Conditions',
+                   tip='!![en]Bag containing exemption rules: column, operator, and value for this municipality')
+
         # Alias columns
         tbl.aliasColumn('comune_denominazione', '@comune_id.denominazione',
                        name_long='!![en]Municipality Name')

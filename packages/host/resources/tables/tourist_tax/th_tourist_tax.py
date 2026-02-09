@@ -29,9 +29,10 @@ class Form(BaseComponent):
         fb.field('description', colspan=2)
 
     def taxAmounts(self, pane):
-        pane.inlineTableHandler(
+        pane.dialogTableHandler(
             relation='@municipalities',
             viewResource='ViewMunicipalities',
+            formResource='FormFromTax',
             addrow=False,
             delrow=False,
             pbl_classes=True
@@ -39,15 +40,3 @@ class Form(BaseComponent):
 
     def th_options(self):
         return dict(dialog_height='500px', dialog_width='700px')
-
-
-class ViewMunicipalities(BaseComponent):
-    def th_struct(self, struct):
-        r = struct.view().rows()
-        r.fieldcell('municipality_caption', width='30em', name='!![en]Municipality')
-        r.fieldcell('amount', width='10em', edit=True)
-        r.fieldcell('max_nights', width='10em', edit=True)
-        return struct
-
-    def th_order(self):
-        return 'municipality_caption'
