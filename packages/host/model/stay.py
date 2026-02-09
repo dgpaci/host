@@ -53,7 +53,8 @@ class Table(object):
         tbl.formulaColumn('stay_caption',
                          """$facility_name || ' - ' || COALESCE(TO_CHAR($check_in_date, 'DD/MM/YYYY'), 'N/A')""",
                          name_long='!![en]Stay Caption')
-
+        tbl.formulaColumn('is_current', """$check_in_date <= :env_workdate AND $check_out_date >= :env_workdate""",
+                         dtype='B', name_long='!![en]Is Current', _addClass='current_stay')
         #tbl.joinColumn('group_leader_id', name_long='!![en]Group Leader').relation('host.guest.id',
         #                cnd='@group_leader_id.stay_id=$id AND @group_leader_id.@guest_type_code.is_leader IS TRUE'
         #                ) #DP It doesn't work like this

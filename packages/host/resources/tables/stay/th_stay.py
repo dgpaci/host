@@ -5,6 +5,11 @@ from gnr.web.gnrbaseclasses import BaseComponent
 
 
 class View(BaseComponent):
+    css_requires='host'
+    
+    def th_hiddencolumns(self):
+        return '$is_current'
+    
     def th_struct(self, struct):
         r = struct.view().rows()
         r.fieldcell('facility_name', width='25em', name='!![en]Facility')
@@ -16,7 +21,7 @@ class View(BaseComponent):
         r.fieldcell('group_leader_name', width='auto', name='!![en]Group Leader')
 
     def th_order(self):
-        return 'check_in_date DESC'
+        return 'check_in_date:a'
 
     def th_query(self):
         return dict(column='group_leader_name', op='contains', val='')
@@ -25,7 +30,7 @@ class View(BaseComponent):
         top.slotToolbar('5,sections@period,*', childname='upper', _position='<bar')
         
     def th_sections_period(self):
-        return [dict(code='future', caption='!![en]Future Stays', condition='$check_in_date >= :env_workdate'),
+        return [dict(code='future', caption='!![en]Future Stays', condition='$check_out_date >= :env_workdate'),
                 dict(code='past', caption='!![en]Past Stays', condition='$check_out_date < :env_workdate')]
 
 
@@ -46,6 +51,7 @@ class ViewFromFacility(View):
             """)
         r.fieldcell('checkin_url', name='!![en]Link', width='2.5em',
                template='<a href="$checkin_url" target="_blank"><img src="/_rsrc/common/css_icons/svg/16/link_connected.svg" height="13px"/></a>')
+    
     
 class Form(BaseComponent):
     def th_form(self, form):
@@ -146,24 +152,18 @@ class FormOnlineCheckin(BaseComponent):
 
     def guestsNavigation(self, pane):
         """Custom navigation bar with add guest buttons"""
-        pane.dataRpc('dummy', 'checkGuestLimits',
-                    stay_id='^.id',
-                    _onResult="""
-                        SET .can_add_adult = result.can_add_adult;
-                        SET .can_add_child = result.can_add_child;
-                        SET .current_adults = result.current_adults;
-                        SET .current_children = result.current_children;
-                    """,
-                    _fired='^.guests_changed')
+        pane.dataFormula('') #DP Deve calcolare adulti correnti, bambini correnti, e abilitare/disabilitare bottoni
 
-        fb = pane.div(margin='10px').formbuilder(cols=4, border_spacing='15px')
+        bar = pane.slotToolbar('5,adults,children,add_adult,add_child,5')
+        adfb = bar.adults.formbuilder(cols=2)
+        adfb.div("^.current_adults", lbl="!![en]Adults:", font_weight='bold')
+        adfb.div("^.adults_count", lbl='/', font_weight='bold')
+        
+        chfb = bar.children.formbuilder(cols=2)
+        chfb.div("^.current_children", lbl="!![en]Children:", font_weight='bold')
+        chfb.div("^.children_count", lbl='/', font_weight='bold')
 
-        fb.div("""
-            <span>!![en]Adults: <b data-bind=".current_adults">0</b> / <b data-bind=".adults_count">0</b></span>
-            <span style="margin-left: 20px">!![en]Children: <b data-bind=".current_children">0</b> / <b data-bind=".children_count">0</b></span>
-        """, colspan=2)
-
-        fb.button('!![en]Add Adult',
+        bar.add_adult.slotButton('!![en]Add Adult',
                  action="""
                      var stay_id = GET .id;
                      genro.serverCall('addGuest', {stay_id: stay_id, is_adult: true}, function(guest_id) {
@@ -175,7 +175,7 @@ class FormOnlineCheckin(BaseComponent):
                  """,
                  disabled='^.can_add_adult?=!#v')
 
-        fb.button('!![en]Add Child',
+        bar.add_child.slotButton('!![en]Add Child',
                  action="""
                      var stay_id = GET .id;
                      genro.serverCall('addGuest', {stay_id: stay_id, is_adult: false}, function(guest_id) {

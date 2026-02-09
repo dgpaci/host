@@ -44,10 +44,7 @@ class Form(BaseComponent):
                                                                  dialog_width='700px',
                                                                  dialog_height='450px')
 
-        # Bottom section for related stays
-        center = bc.tabContainer(region='center', margin='2px')
-        stays_tab = center.contentPane(title='!![en]Stays')
-        stays_tab.dialogTableHandler(relation='@stays',
+        bc.contentPane(region='center').dialogTableHandler(relation='@stays',
                                      viewResource='ViewFromFacility',
                                      formResource='FormFromFacility')
 
