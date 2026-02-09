@@ -146,15 +146,20 @@ class FormOnlineCheckin(BaseComponent):
         th = pane.thFormHandler(table='host.guest',
                           formResource='FormCheckIn',
                           _class='pbl_roundedGroup',
-                          default_stay_id='=#FORM.pkey',
+                          default_stay_id='=#FORM/parent/#FORM.pkey',
                           formId='guestsForm',
                           showtoolbar=False)
-        pane.dataController("""frm.goToRecord(group_leader_id);""", 
+        pane.dataController("""if(current_guest_id){
+                                frm.goToRecord(current_guest_id);
+                                }else{
+                                    SET #guestsForm.current_guest_id = group_leader_id;
+                                }""",
+                          current_guest_id='^#guestsForm.current_guest_id',
                           group_leader_id='^#FORM.record.group_leader_id', 
                           frm=th.js_form,
                           _virtual_columns='group_leader_id', 
                           _fired='^#FORM.controller.loaded',
-                          _delay=50)
+                          _delay=10)
         return th
 
     def guestsNavigation(self, pane, guest_form=None):
@@ -193,7 +198,6 @@ class FormOnlineCheckin(BaseComponent):
         bar.add_adult.slotButton('!![en]Add Adult',
                  hidden='^.add_adults_enabled?=!#v',
                  disabled='^#guestsForm.controller.valid?=!#v').dataController("""
-                                                                    frm.save();
                                                                     frm.goToRecord('*newrecord*');
                                                                     """,
                                                                     frm=guest_form.js_form,
@@ -202,7 +206,6 @@ class FormOnlineCheckin(BaseComponent):
         bar.add_child.slotButton('!![en]Add Child',
                  hidden='^.add_children_enabled?=!#v',
                  disabled='^#guestsForm.controller.valid?=!#v').dataController("""
-                                                                    frm.save();
                                                                     frm.goToRecord('*newrecord*');
                                                                     """,
                                                                     frm=guest_form.js_form,
@@ -212,7 +215,6 @@ class FormOnlineCheckin(BaseComponent):
                 add_adults_enabled='^.add_adults_enabled',
                 add_children_enabled='^.add_children_enabled',
                 disabled='^#guestsForm.controller.valid?=!#v').dataController("""
-                                                                    frm.save();
                                                                     genro.publish('submit_online_checkin');
                                                                     """,
                                                                     frm=guest_form.js_form,

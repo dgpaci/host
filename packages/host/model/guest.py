@@ -38,8 +38,15 @@ class Table(object):
 
         tbl.column('document_number', size=':20', name_long='!![en]Document Number')
 
-        tbl.column('document_issued_by', size=':100', name_long='!![en]Document Issued By',
-                   name_short='!![en]Issued By')
+        tbl.column('document_issued_by_provincia', size='2', name_long='!![en]Document Issued By (Province)',
+                   name_short='!![en]Issued By (Prov.)')\
+            .relation('glbl.provincia.sigla', mode='foreignkey',
+                     relation_name='issued_documents', onDelete='setnull')
+
+        tbl.column('document_issued_by_country', size='2', name_long='!![en]Document Issued By (Country)',
+                   name_short='!![en]Issued By (Country)')\
+            .relation('glbl.nazione.code', mode='foreignkey',
+                     relation_name='issued_documents', onDelete='setnull')
 
         tbl.column('document_issue_date', dtype='D', name_long='!![en]Document Issue Date',
                    name_short='!![en]Issue Date')

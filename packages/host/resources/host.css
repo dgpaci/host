@@ -12,10 +12,17 @@
     border-style: solid;
 }
 
+.styledBoxTitleBar {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
 .styledBoxTitle {
     font-size: 14px;
     font-weight: bold;
-    margin-bottom: 10px;
+    flex: 1;
 }
 
 /* Blue variant - Stay Info */
