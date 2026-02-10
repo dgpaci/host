@@ -70,7 +70,10 @@ class Form(BaseComponent):
               margin_top='10px', margin_bottom='5px')
         fb.field('document_type_code', width='25em')
         fb.field('document_number', width='25em')
-        fb.field('document_issued_by', width='25em')
+        fb.field('document_issued_by_provincia', lbl='!![en]Issued By (Province)',
+                hidden='^#FORM.record.@anagrafica_id.cittadinanza?=#v!="IT"')
+        fb.field('document_issued_by_country', lbl='!![en]Issued By',
+                hidden='^#FORM.record.@anagrafica_id.cittadinanza?=#v=="IT"')
         fb.field('document_issue_date', width='12em')
         fb.field('document_expiry_date', width='12em')
 
@@ -115,7 +118,10 @@ class FormFromStay(BaseComponent):
                         margin_top='10px', margin_bottom='5px')
         fl.field('document_type_code', colspan=2)
         fl.field('document_number')
-        fl.field('document_issued_by')
+        fl.field('document_issued_by_provincia', lbl='!![en]Issued By (Province)',
+                hidden='^#FORM.record.@anagrafica_id.cittadinanza?=#v!="IT"')
+        fl.field('document_issued_by_country', lbl='!![en]Issued By',
+                hidden='^#FORM.record.@anagrafica_id.cittadinanza?=#v=="IT"')
         fl.field('document_issue_date')
         fl.field('document_expiry_date')
 

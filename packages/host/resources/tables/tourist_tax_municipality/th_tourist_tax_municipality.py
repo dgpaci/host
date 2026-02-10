@@ -43,12 +43,16 @@ class Form(BaseComponent):
 
     def exemptionConditions(self, pane):
         pane.bagGrid(title='!![en]Exemption Conditions',
-                      datapath='.exemption_conditions',
+                      datapath='#FORM.exemption_conditions',
+                      storepath='#FORM.record.exemption_conditions',
                       struct=self._exemptionConditionsStruct,
                       margin='2px',
                       height='100%',
                       addrow=True,
-                      delrow=True)
+                      delrow=True,
+                      pbl_classes=True)
+        pane.dataFormula('.exemption_conditions', 'exemption_conditions',
+                         exemption_conditions='^.exemption_conditions', _onStart=True)
 
     def _exemptionConditionsStruct(self, struct):
         r = struct.view().rows()

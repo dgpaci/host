@@ -35,11 +35,9 @@ class Table(object):
         tbl.column('exemption_conditions', dtype='X', name_long='!![en]Exemption Conditions',
                    tip='!![en]Bag containing exemption rules: column, operator, and value for this municipality')
 
-        # Alias columns
         tbl.aliasColumn('comune_denominazione', '@comune_id.denominazione',
                        name_long='!![en]Municipality Name')
 
-        # Calculated caption field
         tbl.formulaColumn('municipality_caption',
                          'COALESCE($comune_denominazione, $localita)',
                          name_long='!![en]Municipality Caption')

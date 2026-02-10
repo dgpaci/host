@@ -26,13 +26,6 @@ class View(BaseComponent):
     def th_query(self):
         return dict(column='group_leader_name', op='contains', val='')
     
-    def th_top_custom(self, top):
-        top.slotToolbar('5,sections@period,*', childname='upper', _position='<bar')
-        
-    def th_sections_period(self):
-        return [dict(code='future', caption='!![en]Future Stays', condition='$check_out_date >= :env_workdate'),
-                dict(code='past', caption='!![en]Past Stays', condition='$check_out_date < :env_workdate')]
-
 
 class ViewFromFacility(View):
     def th_struct(self, struct):
@@ -52,6 +45,27 @@ class ViewFromFacility(View):
         r.fieldcell('checkin_url', name='!![en]Link', width='2.5em',
                template='<a href="$checkin_url" target="_blank"><img src="/_rsrc/common/css_icons/svg/16/link_connected.svg" height="13px"/></a>')
     
+    def th_top_custom(self, top):
+        top.slotToolbar('5,sections@period,*', childname='upper', _position='<bar')
+        
+    def th_sections_period(self):
+        return [dict(code='future', caption='!![en]Future Stays', condition='$check_out_date >= :env_workdate'),
+                dict(code='past', caption='!![en]Past Stays', condition='$check_out_date < :env_workdate')]
+
+
+    def th_bottom_custom(self, bottom):
+        bar = bottom.slotToolbar('*,import_stays,5')
+        bar.import_stays.paletteImporter(paletteCode='txt_importer',
+                                dockButton_iconClass=False, 
+                                title='!![en]Import Stays from TXT',
+                                importButton_label='!![en]Import',
+                                previewLimit=50, 
+                                dropMessage='!![en]Drag your file here or click to browse', 
+                                filetype='txt', 
+                                matchColumns='*', 
+                                table='host.stay',
+                                importerMethod='stays_from_txt',
+                                constant_facility_id='^#FORM.pkey')
     
 class Form(BaseComponent):
     def th_form(self, form):
