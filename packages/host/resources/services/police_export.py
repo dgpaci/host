@@ -162,16 +162,13 @@ class PoliceExportService(object):
         if not comune_name:
             return ''
 
-        # Query glbl.comune table for ISTAT code
-        comune = self.db.table('glbl.comune').query(
-            where='$nome=:nome',
-            nome=comune_name
-        ).fetchone()
+        codice_comune = self.db.table('glbl.comune').readColumns(
+            where='$denominazione ILIKE :nome',
+            nome=comune_name,
+            columns='$codice_comune'
+        )
 
-        if comune:
-            return comune.get('code_istat', '')
-
-        return ''
+        return codice_comune or ''
 
     def _get_country_code(self, country_code):
         """Get numeric country code from glbl.nazione"""
@@ -182,17 +179,13 @@ class PoliceExportService(object):
         if country_code.isdigit():
             return country_code
 
-        # Query glbl.nazione for numeric code
-        country = self.db.table('glbl.nazione').query(
-            where='$code=:code',
-            code=country_code
-        ).fetchone()
+        nmbr, nmbrunico = self.db.table('glbl.nazione').readColumns(
+            where='$code=:code OR $code3=:code',
+            code=country_code,
+            columns='$nmbr,$nmbrunico'
+        )
 
-        if country:
-            # Assuming there's a numeric code field
-            return country.get('code_istat', '') or country.get('code', '')
-
-        return ''
+        return nmbr or nmbrunico or ''
 
 
 def export_stay_to_file(db, stay_id, output_path=None):
